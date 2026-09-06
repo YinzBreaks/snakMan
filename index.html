@@ -214,7 +214,7 @@
     canvas.height = LOGICAL_HEIGHT * dpr;
     canvas.style.width = `${LOGICAL_WIDTH}px`;
     canvas.style.height = `${LOGICAL_HEIGHT}px`;
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
   }
   resizeCanvas();
@@ -364,21 +364,88 @@
       } catch (e) {}
     }
 
-    playGhostEaten() {
+    // Triumphant brass fanfare sweep during Executive Immunity
+    playBrassFanfare() {
       if (!this.ctx) return;
       try {
         const now = this.ctx.currentTime;
-        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+        const fanfareNotes = [
+          { f: 440, t: 0, d: 0.12 },
+          { f: 554.37, t: 0.10, d: 0.12 },
+          { f: 659.25, t: 0.20, d: 0.16 },
+          { f: 880, t: 0.32, d: 0.48 },
+          { f: 1108.73, t: 0.32, d: 0.48 }
+        ];
+
+        fanfareNotes.forEach(n => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(n.f, now + n.t);
+
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(320, now + n.t);
+          filter.frequency.exponentialRampToValueAtTime(3400, now + n.t + 0.05);
+          filter.frequency.exponentialRampToValueAtTime(1100, now + n.t + n.d);
+          filter.Q.setValueAtTime(2.6, now + n.t);
+
+          gain.gain.setValueAtTime(0.001, now + n.t);
+          gain.gain.linearRampToValueAtTime(0.16, now + n.t + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now + n.t);
+          osc.stop(now + n.t + n.d + 0.05);
+        });
+      } catch (e) {}
+    }
+
+    // Arcade crunch chime upon eating a frightened enemy
+    playEnemyCrunchChime() {
+      if (!this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+
+        // 1. Arcade crunch impact transient
+        const crunchOsc = this.ctx.createOscillator();
+        const crunchGain = this.ctx.createGain();
+        const crunchFilter = this.ctx.createBiquadFilter();
+
+        crunchOsc.type = 'square';
+        crunchOsc.frequency.setValueAtTime(420, now);
+        crunchOsc.frequency.exponentialRampToValueAtTime(60, now + 0.06);
+
+        crunchFilter.type = 'lowpass';
+        crunchFilter.frequency.setValueAtTime(1400, now);
+        crunchFilter.frequency.exponentialRampToValueAtTime(200, now + 0.06);
+
+        crunchGain.gain.setValueAtTime(0.24, now);
+        crunchGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+        crunchOsc.connect(crunchFilter);
+        crunchFilter.connect(crunchGain);
+        crunchGain.connect(this.ctx.destination);
+        crunchOsc.start(now);
+        crunchOsc.stop(now + 0.075);
+
+        // 2. High arcade victory chime bell (880Hz -> 1760Hz)
+        const chimeFreqs = [880, 1320, 1760];
+        chimeFreqs.forEach((freq, idx) => {
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + i * 0.04);
-          gain.gain.setValueAtTime(0.12, now + i * 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.04 + 0.15);
+          osc.frequency.setValueAtTime(freq, now + 0.04 + idx * 0.04);
+          gain.gain.setValueAtTime(0.14, now + 0.04 + idx * 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04 + idx * 0.04 + 0.22);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
-          osc.start(now + i * 0.04);
-          osc.stop(now + i * 0.04 + 0.16);
+          osc.start(now + 0.04 + idx * 0.04);
+          osc.stop(now + 0.04 + idx * 0.04 + 0.25);
         });
       } catch (e) {}
     }
@@ -407,15 +474,6 @@
   const audio = new SoundEngine();
 
   // --- 3. BUNKER MAZE & TILE MAP GENERATION ---
-  // Legend:
-  // 'W' = Wall
-  // '.' = Mini-Burger (Pellet, 10pts)
-  // 'O' = Diet Drink (Power Pellet, 50pts)
-  // ' ' = Empty Path
-  // 'D' = Ghost Security Gate Door
-  // 'G' = Ghost Locker Interior
-  // 'T' = Warp Tunnel (Row 17)
-
   const HALF_MAP = [
     "              ", // 0  HUD
     "              ", // 1  HUD
@@ -455,7 +513,6 @@
     "              "  // 35 HUD
   ];
 
-  // Construct symmetrical 28x36 map matrix
   function buildGrid() {
     const grid = [];
     for (let r = 0; r < ROWS; r++) {
@@ -474,7 +531,6 @@
 
   let maze = buildGrid();
 
-  // Count total burgers and drinks for win condition
   function countPellets(mapGrid) {
     let count = 0;
     for (let r = 0; r < ROWS; r++) {
@@ -488,8 +544,7 @@
   let totalPellets = countPellets(maze);
   let pelletsRemaining = totalPellets;
 
-  // --- 4. PROCEDURAL SLATE FLOOR TEXTURE WITH CRACKS ---
-  // Seeded crack lines for consistent bunker feel
+  // Floor cracks
   const floorCracks = [];
   (() => {
     for (let r = 3; r <= 32; r++) {
@@ -506,7 +561,7 @@
     }
   })();
 
-  // --- 5. GAME STATE ---
+  // --- 4. GAME STATE ---
   let score = 0;
   let highScore = parseInt(localStorage.getItem('snakmanr_hi') || '0', 10);
   let lives = 3;
@@ -516,36 +571,106 @@
   let gameStarted = false;
 
   // Executive Immunity (Power Pellet effect)
-  let immunityTime = 0; // seconds remaining
-  let ghostStreakScore = 200; // doubles per ghost eaten
-  let popupScores = []; // floating scores
+  let immunityTime = 0;
+  let ghostStreakScore = 200;
+  let popupScores = [];
 
-  // --- 6. PAC-DON (PLAYER) CONTROLLER ---
+  // Death Animation State
+  const deathAnim = {
+    active: false,
+    timer: 0,
+    maxTimer: 1.4,
+    x: 0,
+    y: 0,
+    spinAngle: 0,
+    hairOffsetY: 0,
+    scale: 1.0,
+    particles: []
+  };
+
+  function triggerDeath() {
+    deathAnim.active = true;
+    deathAnim.timer = 0;
+    deathAnim.x = player.x;
+    deathAnim.y = player.y;
+    deathAnim.spinAngle = 0;
+    deathAnim.hairOffsetY = 0;
+    deathAnim.scale = 1.0;
+    deathAnim.particles = [];
+
+    // Explode into gold coins
+    for (let i = 0; i < 12; i++) {
+      const ang = (Math.PI * 2 * i) / 12 + (Math.random() - 0.5) * 0.4;
+      const spd = 2.2 + Math.random() * 2.8;
+      deathAnim.particles.push({
+        type: 'coin',
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd - 1.8,
+        rot: Math.random() * Math.PI,
+        rotSpeed: (Math.random() - 0.5) * 10,
+        size: 4 + Math.random() * 2.5,
+        alpha: 1.0
+      });
+    }
+
+    // Explode into baby powder particles
+    for (let i = 0; i < 18; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const spd = 1.2 + Math.random() * 2.4;
+      deathAnim.particles.push({
+        type: 'powder',
+        x: player.x + (Math.random() - 0.5) * 6,
+        y: player.y + (Math.random() - 0.5) * 6,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd - 0.9,
+        size: 5 + Math.random() * 5,
+        alpha: 0.85
+      });
+    }
+
+    audio.playDeath();
+  }
+
+  // --- 5. PAC-DON (PLAYER) CONTROLLER ---
   const player = {
     x: 13.5 * TILE_SIZE,
     y: 26 * TILE_SIZE,
     dirX: 0,
     dirY: 0,
+    lastDirX: 1,
+    lastDirY: 0,
     nextDirX: 0,
     nextDirY: 0,
-    baseSpeed: 2.3, // ~80% tile speed
+    baseSpeed: 2.3,
     speed: 2.3,
     mouthAngle: 0,
     mouthOpening: true,
-    angle: 0, // facing rotation
+    angle: 0,
 
     reset() {
       this.x = 13.5 * TILE_SIZE;
       this.y = 26 * TILE_SIZE;
       this.dirX = 0;
       this.dirY = 0;
+      this.lastDirX = 1;
+      this.lastDirY = 0;
       this.nextDirX = 0;
       this.nextDirY = 0;
       this.angle = 0;
     },
 
     update(dt) {
+      if (deathAnim.active) return;
+
       this.speed = (immunityTime > 0) ? this.baseSpeed * 1.15 : this.baseSpeed;
+
+      // Keep track of facing vector for Mohammed & Charlie AI
+      if (this.dirX !== 0 || this.dirY !== 0) {
+        this.lastDirX = this.dirX;
+        this.lastDirY = this.dirY;
+      }
 
       // Handle Immediate Direction Reversal
       if (this.nextDirX !== 0 && this.nextDirX === -this.dirX) {
@@ -567,7 +692,6 @@
         const targetCol = tileCol + this.nextDirX;
         const targetRow = tileRow + this.nextDirY;
         if (canWalk(targetCol, targetRow, false)) {
-          // Snap perpendicular axis and adopt new direction
           if (this.nextDirX !== 0) {
             this.y = centerY;
             this.dirX = this.nextDirX;
@@ -582,12 +706,11 @@
         }
       }
 
-      // Check for wall collision ahead in current direction
+      // Check wall collision ahead
       if (this.dirX !== 0 || this.dirY !== 0) {
         const nextCol = tileCol + this.dirX;
         const nextRow = tileRow + this.dirY;
 
-        // If approaching tile center and next tile is a wall, stop at center
         const approachingCenter =
           (this.dirX > 0 && this.x >= centerX) ||
           (this.dirX < 0 && this.x <= centerX) ||
@@ -612,11 +735,11 @@
       else if (this.dirY > 0) this.angle = Math.PI / 2;
       else if (this.dirY < 0) this.angle = -Math.PI / 2;
 
-      // Animate chomping wedge mouth (0 to 45 degrees)
+      // Animate chomping mouth
       if (this.dirX !== 0 || this.dirY !== 0) {
         if (this.mouthOpening) {
           this.mouthAngle += 0.09;
-          if (this.mouthAngle >= 0.785) { // 45 deg
+          if (this.mouthAngle >= 0.785) {
             this.mouthAngle = 0.785;
             this.mouthOpening = false;
           }
@@ -629,7 +752,7 @@
         }
       }
 
-      // Row 17 Side Warp Tunnel wrapping
+      // Row 17 Warp Tunnel wrapping
       if (tileRow === 17) {
         if (this.x < -TILE_SIZE / 2) {
           this.x = LOGICAL_WIDTH + TILE_SIZE / 2 - 2;
@@ -657,12 +780,12 @@
           score += 50;
           pelletsRemaining--;
           audio.playDrinkSlurp();
-          immunityTime = 9.0; // 9 seconds of Executive Immunity!
+          audio.playBrassFanfare(); // Triumphant brass fanfare sweep!
+          immunityTime = 8.0; // 8 seconds of Executive Immunity
           ghostStreakScore = 200;
           ghosts.forEach(g => {
-            if (g.state === 'CHASE') {
+            if (!g.ignoresImmunity && g.state === 'CHASE') {
               g.state = 'FRIGHTENED';
-              // Reverse direction on frightened
               g.dirX = -g.dirX;
               g.dirY = -g.dirY;
             }
@@ -680,26 +803,70 @@
     if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return false;
     const tile = maze[row][col];
     if (tile === 'W') return false;
-    if (tile === 'D') return isGhost; // Only ghosts can traverse security gate
-    if (tile === 'G') return isGhost; // Only ghosts can enter Evidence Locker
+    if (tile === 'D') return isGhost;
+    if (tile === 'G') return isGhost;
     return true;
   }
 
-  // --- 7. EVIDENCE LOCKER GHOSTS (FEDERAL AGENTS) ---
-  const GHOST_DEFS = [
-    { name: "Special Agent Jack", color: "#3b82f6", releaseTime: 0.5, homeCol: 13, homeRow: 17 },
-    { name: "Agent Fani", color: "#ec4899", releaseTime: 3.5, homeCol: 12, homeRow: 17 },
-    { name: "Agent Letitia", color: "#f43f5e", releaseTime: 7.0, homeCol: 14, homeRow: 17 },
-    { name: "Agent Alvin", color: "#06b6d4", releaseTime: 11.0, homeCol: 15, homeRow: 17 }
+  // --- 6. THE 5 ENEMY ROSTER & BEHAVIORAL AI ENGINES ---
+  const ENEMY_DEFS = [
+    {
+      name: "Jeffrey",
+      color: "#f8fafc",
+      releaseTime: 0.2,
+      homeCol: 13,
+      homeRow: 17,
+      ignoresImmunity: false,
+      speedMult: 1.0
+    },
+    {
+      name: "Mohammed",
+      color: "#e2e8f0",
+      releaseTime: 2.5,
+      homeCol: 12,
+      homeRow: 17,
+      ignoresImmunity: false,
+      speedMult: 1.0
+    },
+    {
+      name: "Charlie",
+      color: "#1e3a8a",
+      releaseTime: 5.0,
+      homeCol: 14,
+      homeRow: 17,
+      ignoresImmunity: false,
+      speedMult: 1.0
+    },
+    {
+      name: "Jose",
+      color: "#78716c",
+      releaseTime: 8.0,
+      homeCol: 11,
+      homeRow: 17,
+      ignoresImmunity: false,
+      speedMult: 1.0
+    },
+    {
+      name: "Cholesterol",
+      color: "#eab308",
+      releaseTime: 1.0,
+      homeCol: 15,
+      homeRow: 17,
+      ignoresImmunity: true, // The Hallway Blocker: IGNORES IMMUNITY, NEVER FLEES
+      speedMult: 0.70        // Moves at 70% speed
+    }
   ];
 
-  class Ghost {
+  class Enemy {
     constructor(def) {
       this.name = def.name;
       this.color = def.color;
       this.releaseTime = def.releaseTime;
       this.homeCol = def.homeCol;
       this.homeRow = def.homeRow;
+      this.ignoresImmunity = def.ignoresImmunity;
+      this.speedMult = def.speedMult;
+      this.waypointIdx = 0;
       this.reset();
     }
 
@@ -708,15 +875,17 @@
       this.y = this.homeRow * TILE_SIZE + TILE_SIZE / 2;
       this.dirX = 0;
       this.dirY = -1;
-      this.state = 'IN_LOCKER'; // IN_LOCKER, LEAVING_LOCKER, CHASE, FRIGHTENED, RETURNING
+      this.state = 'IN_LOCKER';
       this.timer = 0;
-      this.speed = 1.95;
+      this.speed = 1.95 * this.speedMult;
+      this.waypointIdx = 0;
     }
 
     update(dt) {
+      if (deathAnim.active) return;
       this.timer += dt;
 
-      // State: In Locker bouncing
+      // In Locker bouncing
       if (this.state === 'IN_LOCKER') {
         const topY = 16.5 * TILE_SIZE;
         const botY = 17.5 * TILE_SIZE;
@@ -730,10 +899,10 @@
         return;
       }
 
-      // State: Exiting the Sub-Basement Evidence Locker
+      // Leaving Locker
       if (this.state === 'LEAVING_LOCKER') {
-        const targetX = 13.5 * TILE_SIZE; // Door center
-        const targetY = 14.5 * TILE_SIZE; // Just outside gate
+        const targetX = 13.5 * TILE_SIZE;
+        const targetY = 14.5 * TILE_SIZE;
 
         if (Math.abs(this.x - targetX) > 1.5) {
           this.x += Math.sign(targetX - this.x) * 1.5;
@@ -742,23 +911,24 @@
           this.y -= 1.5;
         } else {
           this.y = targetY;
-          this.state = (immunityTime > 0) ? 'FRIGHTENED' : 'CHASE';
+          this.state = (!this.ignoresImmunity && immunityTime > 0) ? 'FRIGHTENED' : 'CHASE';
           this.dirX = Math.random() < 0.5 ? -1 : 1;
           this.dirY = 0;
         }
         return;
       }
 
-      // Speed regulation based on state
+      // Base Speed calculation
+      const baseRoundSpeed = 1.95 + (round - 1) * 0.15;
       if (this.state === 'RETURNING') {
-        this.speed = 3.6; // Eyes sprint back to locker
-      } else if (this.state === 'FRIGHTENED') {
-        this.speed = 1.25; // Terrified slow speed
+        this.speed = 3.6; // Eyes sprinting back
+      } else if (this.state === 'FRIGHTENED' && !this.ignoresImmunity) {
+        this.speed = 1.25; // Frightened slow crawl
       } else {
-        this.speed = 1.95 + (round - 1) * 0.15;
+        this.speed = baseRoundSpeed * this.speedMult;
       }
 
-      // Navigation at Tile Intersections
+      // Intersection Navigation & Target Calculation
       const tileCol = Math.floor(this.x / TILE_SIZE);
       const tileRow = Math.floor(this.y / TILE_SIZE);
       const centerX = tileCol * TILE_SIZE + TILE_SIZE / 2;
@@ -769,7 +939,7 @@
         this.x = centerX;
         this.y = centerY;
 
-        // If RETURNING and reached locker door
+        // Revived in locker
         if (this.state === 'RETURNING') {
           if (tileRow === 15 && (tileCol === 13 || tileCol === 14)) {
             this.state = 'IN_LOCKER';
@@ -781,40 +951,64 @@
           }
         }
 
-        // Determine target destination
         let targetX = player.x;
         let targetY = player.y;
 
         if (this.state === 'RETURNING') {
           targetX = 13.5 * TILE_SIZE;
           targetY = 15 * TILE_SIZE;
-        } else if (this.state === 'FRIGHTENED') {
-          // Move randomly or away from player
+        } else if (this.state === 'FRIGHTENED' && !this.ignoresImmunity) {
+          // Flee away from Pac-Don
           targetX = (this.x > player.x) ? LOGICAL_WIDTH : 0;
           targetY = (this.y > player.y) ? LOGICAL_HEIGHT : 0;
         } else {
-          // Specific Agent AI profiles
-          if (this.name === "Agent Fani") {
-            // Ambush: 4 tiles ahead of player
-            targetX = player.x + player.dirX * 4 * TILE_SIZE;
-            targetY = player.y + player.dirY * 4 * TILE_SIZE;
-          } else if (this.name === "Agent Letitia") {
-            // Patrol corner when far, chase when close
+          // --- 5 AI BEHAVIOR ENGINES ---
+          const fDirX = player.dirX || player.lastDirX || 1;
+          const fDirY = player.dirY || player.lastDirY || 0;
+
+          if (this.name === "Jeffrey") {
+            // Blinky: Direct tile stalker targeting Pac-Don's exact coordinates
+            targetX = player.x;
+            targetY = player.y;
+          } else if (this.name === "Mohammed") {
+            // Pinky: Ambush flanker targeting 4 tiles ahead of Pac-Don's vector
+            targetX = player.x + fDirX * 4 * TILE_SIZE;
+            targetY = player.y + fDirY * 4 * TILE_SIZE;
+          } else if (this.name === "Charlie") {
+            // Inky: Vector pincer calculating intercept paths between Jeffrey and Pac-Don
+            const midX = player.x + fDirX * 2 * TILE_SIZE;
+            const midY = player.y + fDirY * 2 * TILE_SIZE;
+            const jeff = ghosts.find(g => g.name === "Jeffrey") || { x: player.x, y: player.y };
+            targetX = 2 * midX - jeff.x;
+            targetY = 2 * midY - jeff.y;
+          } else if (this.name === "Jose") {
+            // Clyde: Roams aggressively if dist > 8 tiles; retreats to bottom-left corner when closer
             const d = Math.hypot(this.x - player.x, this.y - player.y);
             if (d > 8 * TILE_SIZE) {
-              targetX = 2 * TILE_SIZE;
-              targetY = 31 * TILE_SIZE;
+              targetX = player.x;
+              targetY = player.y;
+            } else {
+              targetX = 1.5 * TILE_SIZE;
+              targetY = 31.5 * TILE_SIZE; // Bottom-Left Corner Retreat
             }
-          } else if (this.name === "Agent Alvin") {
-            // Unpredictable process server roaming
-            if (Math.random() < 0.3) {
-              targetX = Math.random() * LOGICAL_WIDTH;
-              targetY = Math.random() * LOGICAL_HEIGHT;
+          } else if (this.name === "Cholesterol") {
+            // Cholesterol: Central Hallway Blocker (loops central corridor waypoints, ignores immunity)
+            const centralWaypoints = [
+              { x: 6.5 * TILE_SIZE, y: 14.5 * TILE_SIZE },
+              { x: 21.5 * TILE_SIZE, y: 14.5 * TILE_SIZE },
+              { x: 21.5 * TILE_SIZE, y: 20.5 * TILE_SIZE },
+              { x: 6.5 * TILE_SIZE, y: 20.5 * TILE_SIZE }
+            ];
+            const curWp = centralWaypoints[this.waypointIdx];
+            if (Math.hypot(this.x - curWp.x, this.y - curWp.y) < TILE_SIZE * 1.5) {
+              this.waypointIdx = (this.waypointIdx + 1) % centralWaypoints.length;
             }
+            targetX = centralWaypoints[this.waypointIdx].x;
+            targetY = centralWaypoints[this.waypointIdx].y;
           }
         }
 
-        // Possible directional options (prevent 180 turnaround unless dead-ended)
+        // Evaluate directional candidate paths
         const dirs = [
           { x: 0, y: -1 }, // Up
           { x: -1, y: 0 }, // Left
@@ -826,8 +1020,7 @@
         let bestDist = Infinity;
 
         for (const d of dirs) {
-          // Do not reverse unless forced
-          if (d.x === -this.dirX && d.y === -this.dirY) continue;
+          if (d.x === -this.dirX && d.y === -this.dirY) continue; // No 180 reverse
 
           const nCol = tileCol + d.x;
           const nRow = tileRow + d.y;
@@ -844,7 +1037,6 @@
           }
         }
 
-        // If trapped, allow 180 reverse
         if (!bestDir) {
           bestDir = { x: -this.dirX, y: -this.dirY };
         }
@@ -867,33 +1059,28 @@
     }
   }
 
-  const ghosts = GHOST_DEFS.map(def => new Ghost(def));
+  const ghosts = ENEMY_DEFS.map(def => new Enemy(def));
 
-  // --- 8. RENDERING PROCEDURAL SPRITES & ASSETS ---
+  // --- 7. PROCEDURAL SPRITE RENDERING ---
 
-  // A. Procedural Mini-Burger (. pellet)
+  // Mini-Burger
   function drawMiniBurger(ctx, cx, cy) {
     ctx.save();
-    // Top Bun (Golden Bun #d97706)
     ctx.fillStyle = "#d97706";
     ctx.beginPath();
     ctx.ellipse(cx, cy - 2, 5.5, 3.5, 0, Math.PI, 0);
     ctx.fill();
 
-    // Sesame Seeds
     ctx.fillStyle = "#fef08a";
     ctx.fillRect(cx - 2, cy - 4, 1.2, 1);
     ctx.fillRect(cx + 1.5, cy - 3.5, 1.2, 1);
 
-    // Ketchup sliver (#ef4444)
     ctx.fillStyle = "#ef4444";
     ctx.fillRect(cx - 5, cy - 0.5, 10, 1.5);
 
-    // Juicy Brown Patty (#451a03)
     ctx.fillStyle = "#451a03";
     ctx.fillRect(cx - 5.5, cy + 0.8, 11, 2.2);
 
-    // Bottom Bun (#b45309)
     ctx.fillStyle = "#b45309";
     ctx.beginPath();
     ctx.ellipse(cx, cy + 3.2, 5, 2, 0, 0, Math.PI);
@@ -901,20 +1088,19 @@
     ctx.restore();
   }
 
-  // B. Procedural Diet Drink (Power Pellet 'O')
+  // Diet Drink
   let drinkGlow = 0;
   function drawDietDrink(ctx, cx, cy) {
     ctx.save();
     drinkGlow += 0.05;
     const pulse = Math.sin(drinkGlow) * 1.5;
 
-    // Outer radial aura
     ctx.fillStyle = "rgba(251, 191, 36, 0.25)";
     ctx.beginPath();
     ctx.arc(cx, cy, 10 + pulse, 0, Math.PI * 2);
     ctx.fill();
 
-    // Red-and-White Striped Straw poking out top right
+    // Red-and-White Striped Straw
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#ffffff";
     ctx.beginPath();
@@ -934,7 +1120,7 @@
     ctx.fillStyle = "#94a3b8";
     ctx.fillRect(cx - 5.5, cy - 4.5, 11, 2.5);
 
-    // Cup Body (Tapered Paper Cup)
+    // Cup Body
     ctx.fillStyle = "#e2e8f0";
     ctx.beginPath();
     ctx.moveTo(cx - 5, cy - 2);
@@ -944,7 +1130,7 @@
     ctx.closePath();
     ctx.fill();
 
-    // Patriot Blue Label with "DIET" or "D"
+    // Diet Logo
     ctx.fillStyle = "#1e3a8a";
     ctx.fillRect(cx - 4, cy - 0.5, 8, 4);
     ctx.fillStyle = "#ffffff";
@@ -956,7 +1142,7 @@
     ctx.restore();
   }
 
-  // C. Procedural Pac-Don Player Sprite
+  // Pac-Don
   function drawPacDon(ctx, x, y, angle, mouthAngle) {
     ctx.save();
     ctx.translate(x, y);
@@ -977,8 +1163,6 @@
     ctx.rotate(angle);
 
     const R = 11.5;
-
-    // Intense Orange Circular Body (#f59e0b to #ea580c)
     const grad = ctx.createRadialGradient(-2, -3, 2, 0, 0, R);
     grad.addColorStop(0, "#fb923c");
     grad.addColorStop(0.7, "#f59e0b");
@@ -986,28 +1170,26 @@
 
     ctx.fillStyle = grad;
     ctx.beginPath();
-    // Mouth wedge oscillation
     ctx.arc(0, 0, R, mouthAngle, Math.PI * 2 - mouthAngle, false);
     ctx.lineTo(0, 0);
     ctx.closePath();
     ctx.fill();
 
-    // Pale White Raccoon Circles (#fef08a) around eye slots
+    // Pale White Raccoon Circles
     ctx.fillStyle = "#fef08a";
     ctx.beginPath();
     ctx.ellipse(3, -5.5, 4.2, 3, 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Squinting Eye Slot (#1e293b)
+    // Squinting Eye Slot
     ctx.fillStyle = "#0f172a";
     ctx.beginPath();
     ctx.ellipse(4, -5.5, 2.2, 1, 0.1, 0, Math.PI * 2);
     ctx.fill();
 
-    // Signature Swooping Golden Pompadour Hair (#fde047 / #eab308)
+    // Signature Swooping Golden Pompadour Hair
     ctx.fillStyle = "#fde047";
     ctx.beginPath();
-    // Sweeping aerodynamic golden crest swooping back and upward
     ctx.moveTo(-10, -2);
     ctx.quadraticCurveTo(-11, -12, -2, -15);
     ctx.quadraticCurveTo(6, -17, 10, -11);
@@ -1017,7 +1199,6 @@
     ctx.closePath();
     ctx.fill();
 
-    // Sculpted Hair Crest Strands
     ctx.strokeStyle = "#ca8a04";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
@@ -1028,28 +1209,60 @@
     ctx.restore();
   }
 
-  // D. Procedural Federal Agent (Ghost) Sprite
+  // Mini Golden Hair Tuft (for HUD Lives)
+  function drawMiniHairTuft(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = "#fde047";
+    ctx.beginPath();
+    ctx.moveTo(-7, 2);
+    ctx.quadraticCurveTo(-8, -5, -2, -8);
+    ctx.quadraticCurveTo(4, -9, 7, -5);
+    ctx.quadraticCurveTo(8, -2, 4, -3);
+    ctx.quadraticCurveTo(1, -4, -2, -2);
+    ctx.quadraticCurveTo(-5, -1, -7, 2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#ca8a04";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-4, -5);
+    ctx.quadraticCurveTo(2, -7, 5, -4);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // The 5 Procedural Enemy Sprites
   function drawGhost(ctx, ghost) {
     ctx.save();
     ctx.translate(ghost.x, ghost.y);
 
-    const R = 9.5;
-    let bodyColor = ghost.color;
+    const now = Date.now();
 
-    // Terrified Subpoena Agent during Executive Immunity
-    if (ghost.state === 'FRIGHTENED') {
-      const flash = (immunityTime < 2.5 && Math.sin(Date.now() * 0.03) > 0);
-      bodyColor = flash ? "#f8fafc" : "#1e3a8a";
+    // State: RETURNING (Floating dark sunglasses/eyes speeding to locker)
+    if (ghost.state === 'RETURNING') {
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(-6, -3, 5, 4);
+      ctx.fillRect(1, -3, 5, 4);
+      ctx.fillRect(-2, -2, 4, 1.5);
+      ctx.fillStyle = "#60a5fa";
+      ctx.fillRect(-4, -2, 2, 2);
+      ctx.fillRect(3, -2, 2, 2);
+      ctx.restore();
+      return;
     }
 
-    if (ghost.state !== 'RETURNING') {
-      // Classic Arcade Dome Body
-      ctx.fillStyle = bodyColor;
+    // State: FRIGHTENED (Translucent blue, white flash, raising legal briefs)
+    if (ghost.state === 'FRIGHTENED' && !ghost.ignoresImmunity) {
+      const flash = (immunityTime <= 2.0 && Math.sin(now * 0.03) > 0);
+      ctx.fillStyle = flash ? "#f8fafc" : "rgba(96, 165, 250, 0.85)";
+
+      const R = 9.5;
       ctx.beginPath();
       ctx.arc(0, -2, R, Math.PI, 0, false);
       ctx.lineTo(R, 8);
-      // Tentacle scalloped bottom
-      const wave = Math.sin(Date.now() * 0.015) * 1.5;
+      const wave = Math.sin(now * 0.015) * 1.5;
       ctx.lineTo(R * 0.5, 5 + wave);
       ctx.lineTo(0, 8);
       ctx.lineTo(-R * 0.5, 5 - wave);
@@ -1057,65 +1270,283 @@
       ctx.closePath();
       ctx.fill();
 
-      // Sharp Dark Sunglasses (FBI / Secret Service Shades)
-      if (ghost.state !== 'FRIGHTENED') {
-        ctx.fillStyle = "#090d16";
-        // Left lens
-        ctx.fillRect(-6.5, -4, 5, 3.5);
-        // Right lens
-        ctx.fillRect(1.5, -4, 5, 3.5);
-        // Bridge
-        ctx.fillRect(-2, -3.5, 4, 1.2);
+      // Panicked wavy mouth
+      ctx.strokeStyle = flash ? "#ef4444" : "#fef08a";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-5, 2);
+      ctx.lineTo(-3, 0);
+      ctx.lineTo(-1, 2);
+      ctx.lineTo(1, 0);
+      ctx.lineTo(3, 2);
+      ctx.lineTo(5, 0);
+      ctx.stroke();
 
-        // White tie collar accent
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.moveTo(0, 2);
-        ctx.lineTo(-2, 4);
-        ctx.lineTo(2, 4);
-        ctx.closePath();
-        ctx.fill();
+      // White Legal Briefs raised high in fear
+      ctx.save();
+      ctx.translate(7, -6);
+      ctx.rotate(0.15 + Math.sin(now * 0.02) * 0.1);
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(-4, -6, 8, 11);
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(-4, -6, 8, 11);
 
-        // Mini Red Tie
-        ctx.fillStyle = "#ef4444";
-        ctx.beginPath();
-        ctx.moveTo(0, 4);
-        ctx.lineTo(-1.2, 7);
-        ctx.lineTo(0, 8.5);
-        ctx.lineTo(1.2, 7);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        // Panicked wavy mouth when Frightened
-        ctx.strokeStyle = "#fef08a";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(-5, 2);
-        ctx.lineTo(-3, 0);
-        ctx.lineTo(-1, 2);
-        ctx.lineTo(1, 0);
-        ctx.lineTo(3, 2);
-        ctx.lineTo(5, 0);
-        ctx.stroke();
-      }
-    } else {
-      // EATEN: Disembodied Dark Sunglasses Sprinting back
+      // Micro legal text lines
+      ctx.strokeStyle = "#64748b";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(-2, -3); ctx.lineTo(2, -3);
+      ctx.moveTo(-2, -1); ctx.lineTo(2, -1);
+      ctx.moveTo(-2, 1); ctx.lineTo(2, 1);
+      ctx.stroke();
+
+      // Red legal seal
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(1.5, 3, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
+      return;
+    }
+
+    // --- NORMAL UNIQUE ENEMY SPRITES ---
+
+    // 1. "Jeffrey": Linen-cream silhouette wearing dark aviators
+    if (ghost.name === "Jeffrey") {
+      const R = 9.5;
+      ctx.fillStyle = "#f8fafc";
+      ctx.beginPath();
+      ctx.arc(0, -2, R, Math.PI, 0, false);
+      ctx.lineTo(R, 8);
+      ctx.lineTo(R * 0.5, 6);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-R * 0.5, 6);
+      ctx.lineTo(-R, 8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Linen drape creases
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-3, 1); ctx.lineTo(-1, 7);
+      ctx.moveTo(3, 1); ctx.lineTo(1, 7);
+      ctx.stroke();
+
+      // Silver slick hair crest
+      ctx.fillStyle = "#cbd5e1";
+      ctx.beginPath();
+      ctx.ellipse(0, -10, 6, 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dark aviator sunglasses with gold wire bridge
       ctx.fillStyle = "#0f172a";
-      ctx.fillRect(-6, -3, 5, 4);
-      ctx.fillRect(1, -3, 5, 4);
-      ctx.fillRect(-2, -2, 4, 1.5);
-      // Eye pupils glancing back
-      ctx.fillStyle = "#60a5fa";
-      ctx.fillRect(-4, -2, 2, 2);
-      ctx.fillRect(3, -2, 2, 2);
+      // Teardrop lenses
+      ctx.beginPath();
+      ctx.ellipse(-4, -3, 3, 2.4, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(4, -3, 3, 2.4, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#fbbf24"; // Gilded gold aviator bridge
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-2, -4);
+      ctx.lineTo(2, -4);
+      ctx.stroke();
+    }
+
+    // 2. "Mohammed": White flowing thobe silhouette with sunglasses & gold watch
+    else if (ghost.name === "Mohammed") {
+      const R = 9.5;
+      ctx.fillStyle = "#e2e8f0";
+      ctx.beginPath();
+      ctx.arc(0, -2, R, Math.PI, 0, false);
+      ctx.lineTo(R, 8);
+      ctx.lineTo(R * 0.5, 6.5);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-R * 0.5, 6.5);
+      ctx.lineTo(-R, 8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Thobe collar gold embroidery line
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(0, 7);
+      ctx.stroke();
+
+      // Sleek modern dark sunglasses
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(-6, -4, 5, 2.8);
+      ctx.fillRect(1, -4, 5, 2.8);
+      ctx.fillRect(-1.5, -3.5, 3, 1);
+
+      // Gold watch accent with sparkle glint
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(6.5, 2, 3, 3.5);
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(8, 3.5, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 3. "Charlie": Oversized navy blue blazer holding mini podcast microphone
+    else if (ghost.name === "Charlie") {
+      const R = 9.5;
+      // Oversized Navy Blue Blazer
+      ctx.fillStyle = "#1e3a8a";
+      ctx.beginPath();
+      ctx.arc(0, -2, R, Math.PI, 0, false);
+      ctx.lineTo(R + 1, 8);
+      ctx.lineTo(R * 0.5, 6.5);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-R * 0.5, 6.5);
+      ctx.lineTo(-R - 1, 8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Lapels
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-4, -1); ctx.lineTo(-1, 5); ctx.lineTo(0, 7);
+      ctx.moveTo(4, -1); ctx.lineTo(1, 5); ctx.lineTo(0, 7);
+      ctx.stroke();
+
+      // Tousled mop hair
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.arc(-3, -9, 3, 0, Math.PI * 2);
+      ctx.arc(2, -10, 3.5, 0, Math.PI * 2);
+      ctx.arc(5, -8, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(-4, -4, 3, 3);
+      ctx.fillRect(1, -4, 3, 3);
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(-3, -3, 2, 2);
+      ctx.fillRect(2, -3, 2, 2);
+
+      // Mini Podcast Microphone held in front
+      ctx.fillStyle = "#94a3b8"; // Silver boom/stand
+      ctx.fillRect(5, 0, 1.5, 7);
+      ctx.fillStyle = "#334155"; // Dark foam windscreen
+      ctx.beginPath();
+      ctx.ellipse(6, 0, 2.5, 3.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 4. "Jose": Khaki border patrol agent uniform with clipboard
+    else if (ghost.name === "Jose") {
+      const R = 9.5;
+      // Khaki uniform
+      ctx.fillStyle = "#78716c";
+      ctx.beginPath();
+      ctx.arc(0, -2, R, Math.PI, 0, false);
+      ctx.lineTo(R, 8);
+      ctx.lineTo(R * 0.5, 6.5);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-R * 0.5, 6.5);
+      ctx.lineTo(-R, 8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Uniform shoulder epaulets
+      ctx.fillStyle = "#57534e";
+      ctx.fillRect(-R, -1, 3, 2);
+      ctx.fillRect(R - 3, -1, 3, 2);
+
+      // Border patrol campaign hat
+      ctx.fillStyle = "#57534e";
+      ctx.beginPath();
+      ctx.ellipse(0, -9, 8, 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#44403c";
+      ctx.beginPath();
+      ctx.ellipse(0, -11, 4, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Serious eyes
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(-4, -4, 3, 2);
+      ctx.fillRect(1, -4, 3, 2);
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(-3, -4, 2, 2);
+      ctx.fillRect(2, -4, 2, 2);
+
+      // Clipboard in hand
+      ctx.fillStyle = "#a16207"; // Brown clipboard
+      ctx.fillRect(-8, 1, 5, 7);
+      ctx.fillStyle = "#f8fafc"; // White paper sheets
+      ctx.fillRect(-7.5, 2, 4, 5.5);
+      ctx.fillStyle = "#cbd5e1"; // Silver clip
+      ctx.fillRect(-6.5, 0.5, 2, 1.2);
+    }
+
+    // 5. "Cholesterol": Massive lumbering golden-yellow blob with pulsating outer border
+    else if (ghost.name === "Cholesterol") {
+      const R = 13.5; // Massive size
+      const pulseBorder = Math.sin(now * 0.007) * 2;
+
+      // Pulsating outer lipid border
+      ctx.save();
+      ctx.fillStyle = "#ca8a04";
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const ang = (i * Math.PI * 2) / 8;
+        const wobble = Math.sin(now * 0.008 + i * 1.5) * 2.2;
+        const rad = R + 2.5 + wobble;
+        const px = Math.cos(ang) * rad;
+        const py = Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Golden-Yellow Blob Body (#eab308)
+      ctx.fillStyle = "#eab308";
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const ang = (i * Math.PI * 2) / 8;
+        const wobble = Math.sin(now * 0.008 + i * 1.5) * 1.5;
+        const rad = R + wobble;
+        const px = Math.cos(ang) * rad;
+        const py = Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Shiny cholesterol lipid globules
+      ctx.fillStyle = "#fef08a";
+      ctx.beginPath();
+      ctx.arc(-4, -5, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(5, -3, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Small squinting sluggish eyes
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(-5, 0, 3, 2);
+      ctx.fillRect(2, 0, 3, 2);
+
+      ctx.restore();
     }
 
     ctx.restore();
   }
 
-  // --- 9. MAZE & BUNKER WALL DRAWING ---
+  // --- 8. MAZE & BUNKER WALL DRAWING ---
   function drawMaze() {
-    // 1. Cracked Slate Bunker Flooring (#1e293b)
     ctx.fillStyle = "#1e293b";
     ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
 
@@ -1145,7 +1576,7 @@
       ctx.stroke();
     });
 
-    // 2. Double-Bordered Gilded Gold Moldings (#fbbf24) for Walls
+    // Double-Bordered Gilded Gold Moldings
     for (let r = 3; r <= 32; r++) {
       for (let c = 0; c < COLS; c++) {
         const tile = maze[r][c];
@@ -1154,22 +1585,19 @@
           const x = c * TILE_SIZE;
           const y = r * TILE_SIZE;
 
-          // Rich burnished gold-bronze wall core
           ctx.fillStyle = "#451a03";
           ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-          // Inner metallic fill
           ctx.fillStyle = "#78350f";
           ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
 
-          // Double gilded borders on exterior wall edges
           const topOpen = (r > 0 && maze[r - 1][c] !== 'W');
           const botOpen = (r < ROWS - 1 && maze[r + 1][c] !== 'W');
           const leftOpen = (c > 0 && maze[r][c - 1] !== 'W');
           const rightOpen = (c < COLS - 1 && maze[r][c + 1] !== 'W');
 
           ctx.lineWidth = 2.0;
-          ctx.strokeStyle = "#fbbf24"; // Gilded gold molding
+          ctx.strokeStyle = "#fbbf24";
 
           if (topOpen) {
             ctx.beginPath();
@@ -1196,51 +1624,37 @@
             ctx.stroke();
           }
 
-          // Secondary gilded inner accent line
           ctx.strokeStyle = "rgba(254, 240, 138, 0.45)";
           ctx.lineWidth = 1.0;
-          if (topOpen) {
-            ctx.strokeRect(x + 3, y + 3, TILE_SIZE - 6, 1);
-          }
-          if (botOpen) {
-            ctx.strokeRect(x + 3, y + TILE_SIZE - 4, TILE_SIZE - 6, 1);
-          }
-          if (leftOpen) {
-            ctx.strokeRect(x + 3, y + 3, 1, TILE_SIZE - 6);
-          }
-          if (rightOpen) {
-            ctx.strokeRect(x + TILE_SIZE - 4, y + 3, 1, TILE_SIZE - 6);
-          }
+          if (topOpen) ctx.strokeRect(x + 3, y + 3, TILE_SIZE - 6, 1);
+          if (botOpen) ctx.strokeRect(x + 3, y + TILE_SIZE - 4, TILE_SIZE - 6, 1);
+          if (leftOpen) ctx.strokeRect(x + 3, y + 3, 1, TILE_SIZE - 6);
+          if (rightOpen) ctx.strokeRect(x + TILE_SIZE - 4, y + 3, 1, TILE_SIZE - 6);
         }
       }
     }
 
-    // 3. Center Ghost Pen: "Sub-Basement Evidence Locker" Plaque & Security Gate
+    // Evidence Locker Security Gate & Plaque
     const lockerX = 10 * TILE_SIZE;
     const lockerY = 15 * TILE_SIZE;
     const lockerW = 8 * TILE_SIZE;
-    const lockerH = 5 * TILE_SIZE;
 
-    // Security Gate Door at Row 15 (cols 12-15)
     ctx.save();
     const gatePulse = Math.sin(Date.now() * 0.008) * 0.3 + 0.7;
     ctx.strokeStyle = `rgba(251, 191, 36, ${gatePulse})`;
     ctx.lineWidth = 2.5;
-    // Vertical gilded security bars
     for (let bx = 12 * TILE_SIZE + 2; bx <= 15 * TILE_SIZE + TILE_SIZE - 2; bx += 5) {
       ctx.beginPath();
       ctx.moveTo(bx, 15 * TILE_SIZE + 2);
       ctx.lineTo(bx, 16 * TILE_SIZE - 2);
       ctx.stroke();
     }
-    // Cross security bar
     ctx.beginPath();
     ctx.moveTo(12 * TILE_SIZE, 15.5 * TILE_SIZE);
     ctx.lineTo(16 * TILE_SIZE, 15.5 * TILE_SIZE);
     ctx.stroke();
     ctx.restore();
 
-    // Evidence Locker Interior Label Plaque
     ctx.save();
     ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
     ctx.fillRect(lockerX + 8, lockerY + 1.2 * TILE_SIZE, lockerW - 16, 2.2 * TILE_SIZE);
@@ -1257,19 +1671,17 @@
     ctx.fillText("EVIDENCE LOCKER", 14 * TILE_SIZE, lockerY + 2.8 * TILE_SIZE);
     ctx.restore();
 
-    // 4. Row 17 Warp Tunnels Visual Chevrons
+    // Warp Chevrons
     ctx.save();
     ctx.fillStyle = "rgba(251, 191, 36, 0.6)";
     ctx.font = "bold 10px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    // Left Warp Portal
     ctx.fillText("◀◀", 10, 17.5 * TILE_SIZE);
-    // Right Warp Portal
     ctx.fillText("▶▶", LOGICAL_WIDTH - 10, 17.5 * TILE_SIZE);
     ctx.restore();
 
-    // 5. Draw Collectibles (Burgers & Diet Drinks)
+    // Draw Collectibles
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const item = maze[r][c];
@@ -1285,7 +1697,7 @@
     }
   }
 
-  // --- 10. HUD DISPLAY & OVERLAYS ---
+  // --- 9. HUD DISPLAY & OVERLAYS ---
   function drawHUD() {
     ctx.save();
     ctx.fillStyle = "#fbbf24";
@@ -1318,19 +1730,17 @@
       ctx.fillText(`★ EXECUTIVE IMMUNITY: ${immunityTime.toFixed(1)}s ★`, LOGICAL_WIDTH / 2, 52);
     }
 
-    // Bottom Row: Lives & Pellets
+    // Bottom Row: Lives (Represented by Mini Golden Hair Tufts!) & Pellets
     const botY = 34.5 * TILE_SIZE;
     ctx.textAlign = "left";
     ctx.fillStyle = "#94a3b8";
     ctx.font = "bold 11px sans-serif";
     ctx.fillText("LIVES:", 16, botY);
 
-    // Mini Pac-Don Life Icons
     for (let i = 0; i < lives; i++) {
-      drawPacDon(ctx, 70 + i * 22, botY - 3, 0, 0.35);
+      drawMiniHairTuft(ctx, 70 + i * 22, botY - 4);
     }
 
-    // Burger Count Remaining
     ctx.textAlign = "right";
     ctx.fillStyle = "#fbbf24";
     ctx.fillText(`BURGERS: ${pelletsRemaining}`, LOGICAL_WIDTH - 16, botY);
@@ -1347,7 +1757,7 @@
       if (p.alpha <= 0) popupScores.splice(i, 1);
     }
 
-    // Game Over / Victory Screen Modals
+    // Modals
     if (gameOver) {
       ctx.fillStyle = "rgba(11, 15, 25, 0.88)";
       ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -1393,17 +1803,82 @@
     ctx.restore();
   }
 
-  // --- 11. GAME LOGIC & COLLISION ---
+  // Draw Death Particles (Coins & Baby Powder)
+  function drawDeathParticles(ctx) {
+    deathAnim.particles.forEach(p => {
+      ctx.save();
+      if (p.type === 'coin') {
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = `rgba(251, 191, 36, ${Math.max(0, p.alpha)})`;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size, p.size * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(254, 240, 138, ${Math.max(0, p.alpha)})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = `rgba(120, 53, 15, ${Math.max(0, p.alpha)})`;
+        ctx.font = "bold 5px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("$", 0, 0);
+      } else if (p.type === 'powder') {
+        ctx.fillStyle = `rgba(248, 250, 252, ${Math.max(0, p.alpha * 0.75)})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
+
+  // --- 10. GAME LOGIC & COLLISION ---
   function updateGame(dt) {
     if (gameOver || victory) return;
 
-    // Executive Immunity timer countdown
+    // Handle Death Animation
+    if (deathAnim.active) {
+      deathAnim.timer += dt;
+      deathAnim.spinAngle += 15 * dt;
+      deathAnim.hairOffsetY -= 40 * dt;
+      deathAnim.scale = Math.max(0, 1 - deathAnim.timer / 1.0);
+
+      // Update death particles
+      deathAnim.particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.type === 'coin') {
+          p.vy += 3.5 * dt;
+          p.rot += p.rotSpeed * dt;
+          p.alpha -= 0.65 * dt;
+        } else if (p.type === 'powder') {
+          p.vx *= 0.94;
+          p.vy *= 0.94;
+          p.size += 5 * dt;
+          p.alpha -= 0.6 * dt;
+        }
+      });
+
+      if (deathAnim.timer >= deathAnim.maxTimer) {
+        deathAnim.active = false;
+        lives--;
+        if (lives <= 0) {
+          gameOver = true;
+        } else {
+          player.reset();
+          ghosts.forEach(g => g.reset());
+        }
+      }
+      return;
+    }
+
+    // Executive Immunity timer countdown (8 seconds)
     if (immunityTime > 0) {
       immunityTime -= dt;
       if (immunityTime <= 0) {
         immunityTime = 0;
         ghosts.forEach(g => {
-          if (g.state === 'FRIGHTENED') g.state = 'CHASE';
+          if (!g.ignoresImmunity && g.state === 'FRIGHTENED') g.state = 'CHASE';
         });
       }
     }
@@ -1411,38 +1886,32 @@
     player.update(dt);
     ghosts.forEach(g => g.update(dt));
 
-    // Player <-> Ghost Collision Checking
+    // Collision Detection
     for (const g of ghosts) {
+      const hitRadius = (g.name === 'Cholesterol') ? (TILE_SIZE * 0.95) : (TILE_SIZE * 0.75);
       const dist = Math.hypot(player.x - g.x, player.y - g.y);
-      if (dist < TILE_SIZE * 0.75) {
-        if (g.state === 'FRIGHTENED') {
-          // Pac-Don eats the terrified ghost!
+
+      if (dist < hitRadius) {
+        if (g.state === 'FRIGHTENED' && !g.ignoresImmunity) {
+          // Pac-Don eats frightened enemy!
           g.state = 'RETURNING';
           score += ghostStreakScore;
           popupScores.push({ text: ghostStreakScore, x: g.x, y: g.y, alpha: 1.0 });
-          audio.playGhostEaten();
+          audio.playEnemyCrunchChime(); // Arcade crunch chime!
           ghostStreakScore *= 2;
           if (score > highScore) {
             highScore = score;
             localStorage.setItem('snakmanr_hi', highScore.toString());
           }
-        } else if (g.state === 'CHASE') {
-          // Pac-Don caught by agent
-          lives--;
-          audio.playDeath();
-          if (lives <= 0) {
-            gameOver = true;
-          } else {
-            // Reset player and ghosts positions
-            player.reset();
-            ghosts.forEach(gh => gh.reset());
-          }
+        } else if (g.state === 'CHASE' || g.ignoresImmunity) {
+          // Pac-Don dies on collision with active enemy or Cholesterol!
+          triggerDeath();
           break;
         }
       }
     }
 
-    // Win condition: All pellets and drinks consumed
+    // Win condition
     if (pelletsRemaining <= 0) {
       victory = true;
     }
@@ -1462,11 +1931,12 @@
     gameOver = false;
     victory = false;
     popupScores = [];
+    deathAnim.active = false;
     player.reset();
     ghosts.forEach(g => g.reset());
   }
 
-  // --- 12. INPUT CONTROLLER (KEYBOARD & TOUCH) ---
+  // --- 11. INPUT CONTROLLER (KEYBOARD & TOUCH) ---
   function handleDirectionInput(dx, dy) {
     audio.init();
     audio.resume();
@@ -1485,7 +1955,6 @@
     player.nextDirY = dy;
   }
 
-  // Keyboard controls (Arrows & WASD)
   window.addEventListener('keydown', (e) => {
     switch (e.key) {
       case 'ArrowUp':
@@ -1520,7 +1989,7 @@
     }
   });
 
-  // Touch Swipe Gesture Detection on Canvas
+  // Touch Swipe Gesture Detection
   let touchStartX = 0;
   let touchStartY = 0;
 
@@ -1548,7 +2017,7 @@
     const absX = Math.abs(dx);
     const absY = Math.abs(dy);
 
-    if (Math.max(absX, absY) > 18) { // swipe threshold
+    if (Math.max(absX, absY) > 18) {
       if (absX > absY) {
         handleDirectionInput(dx > 0 ? 1 : -1, 0);
       } else {
@@ -1557,7 +2026,7 @@
     }
   }, { passive: false });
 
-  // Virtual Touch D-Pad Buttons
+  // Virtual Touch D-Pad
   document.getElementById('t-up').addEventListener('pointerdown', (e) => {
     e.preventDefault();
     handleDirectionInput(0, -1);
@@ -1575,13 +2044,12 @@
     handleDirectionInput(1, 0);
   });
 
-  // General click/tap wake-up for Web Audio
   window.addEventListener('pointerdown', () => {
     audio.init();
     audio.resume();
   });
 
-  // --- 13. MAIN GAME LOOP ---
+  // --- 12. MAIN GAME LOOP ---
   let lastTime = performance.now();
 
   function gameLoop(now) {
@@ -1590,11 +2058,67 @@
 
     updateGame(dt);
 
-    // Render pass
     ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     drawMaze();
     ghosts.forEach(g => drawGhost(ctx, g));
-    drawPacDon(ctx, player.x, player.y, player.angle, player.mouthAngle);
+
+    if (deathAnim.active) {
+      drawDeathParticles(ctx);
+
+      if (deathAnim.scale > 0.05) {
+        ctx.save();
+        ctx.translate(deathAnim.x, deathAnim.y);
+        ctx.scale(deathAnim.scale, deathAnim.scale);
+        ctx.rotate(deathAnim.spinAngle);
+
+        const R = 11.5;
+        const grad = ctx.createRadialGradient(-2, -3, 2, 0, 0, R);
+        grad.addColorStop(0, "#fb923c");
+        grad.addColorStop(0.7, "#f59e0b");
+        grad.addColorStop(1, "#ea580c");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, R, 0.4, Math.PI * 2 - 0.4);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#fef08a";
+        ctx.beginPath();
+        ctx.ellipse(3, -5.5, 4.2, 3, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#0f172a";
+        ctx.beginPath();
+        ctx.ellipse(4, -5.5, 2.2, 1, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Golden hair tuft launching upward away from head!
+        ctx.save();
+        ctx.translate(deathAnim.x, deathAnim.y + deathAnim.hairOffsetY);
+        ctx.rotate(deathAnim.spinAngle * 0.5);
+        ctx.fillStyle = "#fde047";
+        ctx.beginPath();
+        ctx.moveTo(-10, -2);
+        ctx.quadraticCurveTo(-11, -12, -2, -15);
+        ctx.quadraticCurveTo(6, -17, 10, -11);
+        ctx.quadraticCurveTo(12, -7, 6, -8);
+        ctx.quadraticCurveTo(2, -9, -3, -7);
+        ctx.quadraticCurveTo(-8, -6, -10, -2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#ca8a04";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-6, -11);
+        ctx.quadraticCurveTo(2, -14, 8, -10);
+        ctx.stroke();
+        ctx.restore();
+      }
+    } else {
+      drawPacDon(ctx, player.x, player.y, player.angle, player.mouthAngle);
+    }
+
     drawHUD();
 
     requestAnimationFrame(gameLoop);

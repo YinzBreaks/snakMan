@@ -751,8 +751,8 @@
     "W.............", // 22
     "W.WWWW.WWWWWW.", // 23
     "W.WWWW.WWWWWW.", // 24
-    "WO..WW........", // 25 Bottom-Left Corner Drink 'O'
-    "WWW.WW.WW.WWWW", // 26 Pac-Don start lane
+    "WO..WW....... ", // 25 Lower main corridor (Pac-Don spawn at col 13-14)
+    "WWW.WW.WW.WWWW", // 26 Lower wall island
     "WWW.WW.WW.WWWW", // 27
     "W......WW.....", // 28
     "W.WWWWWWWWWW.W", // 29
@@ -913,7 +913,7 @@
   // --- 5. PAC-DON (PLAYER) CONTROLLER ---
   const player = {
     x: 13.5 * TILE_SIZE,
-    y: 26 * TILE_SIZE,
+    y: 25.5 * TILE_SIZE,
     dirX: 0,
     dirY: 0,
     lastDirX: 1,
@@ -928,7 +928,7 @@
 
     reset() {
       this.x = 13.5 * TILE_SIZE;
-      this.y = 26 * TILE_SIZE;
+      this.y = 25.5 * TILE_SIZE;
       this.dirX = 0;
       this.dirY = 0;
       this.lastDirX = 1;
@@ -964,7 +964,8 @@
       const centerY = tileRow * TILE_SIZE + TILE_SIZE / 2;
       const distToCenter = Math.hypot(this.x - centerX, this.y - centerY);
 
-      if ((this.nextDirX !== 0 || this.nextDirY !== 0) && distToCenter < 4.5) {
+      const isStationary = (this.dirX === 0 && this.dirY === 0);
+      if ((this.nextDirX !== 0 || this.nextDirY !== 0) && (distToCenter < 6.0 || isStationary)) {
         const targetCol = tileCol + this.nextDirX;
         const targetRow = tileRow + this.nextDirY;
         if (canWalk(targetCol, targetRow, false)) {

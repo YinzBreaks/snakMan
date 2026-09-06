@@ -956,8 +956,11 @@
     }
   ];
 
+  let round = 1;
+
   function getCurrentBoard() {
-    return BOARDS[(round - 1) % BOARDS.length];
+    const curRound = (typeof round === 'number' && round >= 1) ? round : 1;
+    return BOARDS[(curRound - 1) % BOARDS.length];
   }
 
   function buildGrid(boardDef) {
@@ -1017,7 +1020,7 @@
   // High score key compatibility for SnakMan
   let highScore = parseInt(localStorage.getItem('snakman_high') || localStorage.getItem('bunker_muncher_high') || localStorage.getItem('snakmanr_hi') || '0', 10);
   let lives = 3;
-  let round = 1;
+  // round declared above
   let enemyGlobalSpeedMult = 1.0;
 
   // Level Clear Timer

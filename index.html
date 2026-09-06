@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SnakManr - The Resistance Arcade Cabinet 3</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      font-family: 'Courier New', Courier, monospace, system-ui, sans-serif;
+      overscroll-behavior: none;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Cabinet Bezel & Container */
+    #cabinet {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      max-width: 100vw;
+      max-height: 100vh;
+      padding: 6px;
+      position: relative;
+    }
+
+    #marquee {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 560px;
+      padding: 4px 12px;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #fbbf24;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 -2px 10px rgba(251, 191, 36, 0.2);
+    }
+
+    .cabinet-title {
+      font-weight: 900;
+      font-size: 15px;
+      letter-spacing: 2px;
+      color: #fbbf24;
+      text-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cabinet-sub {
+      font-size: 10px;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Canvas Frame */
+    #canvas-wrapper {
+      position: relative;
+      border: 3px solid #fbbf24;
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.7);
+      background: #0b0f19;
+      line-height: 0;
+      border-radius: 0 0 4px 4px;
+    }
+
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      max-width: 96vw;
+      max-height: calc(92vh - 110px);
+      width: auto;
+      height: auto;
+      aspect-ratio: 28 / 36;
+    }
+
+    /* Touch Controls Overlay */
+    #touch-bar {
+      display: none;
+      width: 100%;
+      max-width: 560px;
+      margin-top: 6px;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 42px 42px;
+      gap: 6px;
+      padding: 2px;
+    }
+
+    @media (pointer: coarse), (max-height: 820px) {
+      #touch-bar {
+        display: grid;
+      }
+    }
+
+    .t-btn {
+      background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+      border: 1px solid #fbbf24;
+      color: #fbbf24;
+      border-radius: 6px;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .t-btn:active {
+      background: #fbbf24;
+      color: #0f172a;
+      transform: scale(0.96);
+    }
+    #t-up { grid-column: 2; grid-row: 1; }
+    #t-left { grid-column: 1; grid-row: 2; }
+    #t-down { grid-column: 2; grid-row: 2; }
+    #t-right { grid-column: 3; grid-row: 2; }
+
+    /* Audio Banner Prompt */
+    #audio-prompt {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(15, 23, 42, 0.95);
+      border: 2px solid #fbbf24;
+      padding: 16px 24px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+      z-index: 50;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #audio-prompt h2 {
+      color: #fbbf24;
+      font-size: 18px;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+
+    #audio-prompt p {
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cabinet">
+    <div id="marquee">
+      <div class="cabinet-title">
+        <span>★</span> SNAKMANR <span>★</span>
+      </div>
+      <div class="cabinet-sub">The Resistance Arcade 3</div>
+    </div>
+
+    <div id="canvas-wrapper">
+      <canvas id="gameCanvas"></canvas>
+      <div id="audio-prompt">
+        <h2>★ CLICK OR SWIPE TO PLAY ★</h2>
+        <p>ARROWS / WASD • AUDIO ENGINE ARMED</p>
+      </div>
+    </div>
+
+    <div id="touch-bar">
+      <button class="t-btn" id="t-up">▲</button>
+      <button class="t-btn" id="t-left">◀</button>
+      <button class="t-btn" id="t-down">▼</button>
+      <button class="t-btn" id="t-right">▶</button>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  // --- 1. CONFIGURATION & CONSTANTS ---
+  const COLS = 28;
+  const ROWS = 36;
+  const TILE_SIZE = 20;
+  const LOGICAL_WIDTH = COLS * TILE_SIZE;  // 560px
+  const LOGICAL_HEIGHT = ROWS * TILE_SIZE; // 720px
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const audioPrompt = document.getElementById('audio-prompt');
+
+  // High-DPI Canvas Scaling
+  function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = LOGICAL_WIDTH * dpr;
+    canvas.height = LOGICAL_HEIGHT * dpr;
+    canvas.style.width = `${LOGICAL_WIDTH}px`;
+    canvas.style.height = `${LOGICAL_HEIGHT}px`;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset
+    ctx.scale(dpr, dpr);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // --- 2. WEB AUDIO API SYNTHESIZER ---
+  class SoundEngine {
+    constructor() {
+      this.ctx = null;
+      this.chompAlt = false;
+      this.bunkerOsc = null;
+      this.bunkerGain = null;
+      this.initialized = false;
+    }
+
+    init() {
+      if (this.initialized) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+          if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+          this.startBunkerHum();
+          this.initialized = true;
+          if (audioPrompt) audioPrompt.style.opacity = '0';
+          setTimeout(() => { if (audioPrompt) audioPrompt.style.display = 'none'; }, 300);
+        }
+      } catch (e) {
+        console.warn('Web Audio error:', e);
+      }
+    }
+
+    resume() {
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    }
+
+    startBunkerHum() {
+      if (!this.ctx) return;
+      try {
+        // Subtle procedural low background oscillator (~55Hz sawtooth with lowpass filter)
+        this.bunkerOsc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        this.bunkerGain = this.ctx.createGain();
+
+        this.bunkerOsc.type = 'sawtooth';
+        this.bunkerOsc.frequency.setValueAtTime(55, this.ctx.currentTime);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(110, this.ctx.currentTime);
+
+        this.bunkerGain.gain.setValueAtTime(0.025, this.ctx.currentTime);
+
+        // Gentle breathing LFO modulation
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.frequency.setValueAtTime(0.3, this.ctx.currentTime);
+        lfoGain.gain.setValueAtTime(3.5, this.ctx.currentTime);
+        lfo.connect(this.bunkerOsc.frequency);
+        lfo.start();
+
+        this.bunkerOsc.connect(filter);
+        filter.connect(this.bunkerGain);
+        this.bunkerGain.connect(this.ctx.destination);
+        this.bunkerOsc.start();
+      } catch (e) {}
+    }
+
+    playChomp() {
+      if (!this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        // Rapid wet biting synth burst (~140Hz square wave with steep pitch drop)
+        this.chompAlt = !this.chompAlt;
+        const startPitch = this.chompAlt ? 155 : 135;
+        const endPitch = this.chompAlt ? 70 : 55;
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(startPitch, now);
+        osc.frequency.exponentialRampToValueAtTime(endPitch, now + 0.065);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(this.chompAlt ? 950 : 800, now);
+        filter.frequency.exponentialRampToValueAtTime(250, now + 0.065);
+
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.075);
+      } catch (e) {}
+    }
+
+    playDrinkSlurp() {
+      if (!this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        // Sweeping high-frequency tone (~400Hz to 1200Hz)
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.35);
+
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(650, now);
+        filter.frequency.exponentialRampToValueAtTime(1350, now + 0.35);
+        filter.Q.setValueAtTime(4.0, now);
+
+        gain.gain.setValueAtTime(0.02, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.4);
+
+        // Straw bubble flutter
+        const bubble = this.ctx.createOscillator();
+        const bGain = this.ctx.createGain();
+        bubble.type = 'triangle';
+        bubble.frequency.setValueAtTime(900, now + 0.15);
+        bubble.frequency.linearRampToValueAtTime(1300, now + 0.32);
+        bGain.gain.setValueAtTime(0.08, now + 0.15);
+        bGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        bubble.connect(bGain);
+        bGain.connect(this.ctx.destination);
+        bubble.start(now + 0.15);
+        bubble.stop(now + 0.36);
+      } catch (e) {}
+    }
+
+    playGhostEaten() {
+      if (!this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.04);
+          gain.gain.setValueAtTime(0.12, now + i * 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.04 + 0.15);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.04);
+          osc.stop(now + i * 0.04 + 0.16);
+        });
+      } catch (e) {}
+    }
+
+    playDeath() {
+      if (!this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const freqs = [480, 440, 390, 350, 310, 270, 220, 160];
+        freqs.forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(f, now + i * 0.09);
+          gain.gain.setValueAtTime(0.15, now + i * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.1);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.09);
+          osc.stop(now + i * 0.09 + 0.11);
+        });
+      } catch (e) {}
+    }
+  }
+
+  const audio = new SoundEngine();
+
+  // --- 3. BUNKER MAZE & TILE MAP GENERATION ---
+  // Legend:
+  // 'W' = Wall
+  // '.' = Mini-Burger (Pellet, 10pts)
+  // 'O' = Diet Drink (Power Pellet, 50pts)
+  // ' ' = Empty Path
+  // 'D' = Ghost Security Gate Door
+  // 'G' = Ghost Locker Interior
+  // 'T' = Warp Tunnel (Row 17)
+
+  const HALF_MAP = [
+    "              ", // 0  HUD
+    "              ", // 1  HUD
+    "              ", // 2  HUD
+    "WWWWWWWWWWWWWW", // 3  Top Wall
+    "WO....WW.....W", // 4  Top-Left Corner Drink 'O'
+    "W.WWWW.WW.WWWW", // 5
+    "W.WWWW.WW.WWWW", // 6
+    "W.............", // 7  Continuous cross corridor
+    "W.WWWW.WW.WWWW", // 8
+    "W.WWWW.WW.WWWW", // 9
+    "W......WW.....", // 10
+    "WWWWWW.WWWWWW ", // 11
+    "     W.WWWWWW ", // 12
+    "     W.WW     ", // 13
+    "WWWWWW.WW     ", // 14 Corridor above locker
+    "     W.WW WDDD", // 15 Security Gate Door
+    "WWWWWW.WW WGGG", // 16 Locker interior
+    "TTTTTT.   WGGG", // 17 WARP TUNNEL at Row 17!
+    "WWWWWW.WW WGGG", // 18 Locker interior
+    "     W.WW WWWW", // 19 Locker bottom wall
+    "     W.WW     ", // 20 Corridor below locker
+    "WWWWWW.WW WWWW", // 21
+    "W.............", // 22 Continuous cross corridor
+    "W.WWWW.WWWWWW.", // 23
+    "W.WWWW.WWWWWW.", // 24
+    "WO..WW........", // 25 Bottom-Left Corner Drink 'O'
+    "WWW.WW.WW.WWWW", // 26 Pac-Don start lane
+    "WWW.WW.WW.WWWW", // 27
+    "W......WW.....", // 28
+    "W.WWWWWWWWWW.W", // 29
+    "W.WWWWWWWWWW.W", // 30
+    "W............ ", // 31 Bottom Hallway
+    "WWWWWWWWWWWWWW", // 32 Bottom Wall
+    "              ", // 33 HUD / Status
+    "              ", // 34 HUD
+    "              "  // 35 HUD
+  ];
+
+  // Construct symmetrical 28x36 map matrix
+  function buildGrid() {
+    const grid = [];
+    for (let r = 0; r < ROWS; r++) {
+      const half = HALF_MAP[r];
+      let fullRow = "";
+      for (let c = 0; c < 14; c++) {
+        fullRow += half[c];
+      }
+      for (let c = 13; c >= 0; c--) {
+        fullRow += half[c];
+      }
+      grid.push(fullRow.split(''));
+    }
+    return grid;
+  }
+
+  let maze = buildGrid();
+
+  // Count total burgers and drinks for win condition
+  function countPellets(mapGrid) {
+    let count = 0;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (mapGrid[r][c] === '.' || mapGrid[r][c] === 'O') count++;
+      }
+    }
+    return count;
+  }
+
+  let totalPellets = countPellets(maze);
+  let pelletsRemaining = totalPellets;
+
+  // --- 4. PROCEDURAL SLATE FLOOR TEXTURE WITH CRACKS ---
+  // Seeded crack lines for consistent bunker feel
+  const floorCracks = [];
+  (() => {
+    for (let r = 3; r <= 32; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if ((r * 17 + c * 31) % 7 === 0) {
+          floorCracks.push({
+            x: c * TILE_SIZE + 4 + ((r * 11) % 10),
+            y: r * TILE_SIZE + 4 + ((c * 13) % 10),
+            dx: ((r + c) % 2 === 0 ? 8 : -7),
+            dy: ((r * c) % 3 === 0 ? 7 : -6)
+          });
+        }
+      }
+    }
+  })();
+
+  // --- 5. GAME STATE ---
+  let score = 0;
+  let highScore = parseInt(localStorage.getItem('snakmanr_hi') || '0', 10);
+  let lives = 3;
+  let gameOver = false;
+  let victory = false;
+  let round = 1;
+  let gameStarted = false;
+
+  // Executive Immunity (Power Pellet effect)
+  let immunityTime = 0; // seconds remaining
+  let ghostStreakScore = 200; // doubles per ghost eaten
+  let popupScores = []; // floating scores
+
+  // --- 6. PAC-DON (PLAYER) CONTROLLER ---
+  const player = {
+    x: 13.5 * TILE_SIZE,
+    y: 26 * TILE_SIZE,
+    dirX: 0,
+    dirY: 0,
+    nextDirX: 0,
+    nextDirY: 0,
+    baseSpeed: 2.3, // ~80% tile speed
+    speed: 2.3,
+    mouthAngle: 0,
+    mouthOpening: true,
+    angle: 0, // facing rotation
+
+    reset() {
+      this.x = 13.5 * TILE_SIZE;
+      this.y = 26 * TILE_SIZE;
+      this.dirX = 0;
+      this.dirY = 0;
+      this.nextDirX = 0;
+      this.nextDirY = 0;
+      this.angle = 0;
+    },
+
+    update(dt) {
+      this.speed = (immunityTime > 0) ? this.baseSpeed * 1.15 : this.baseSpeed;
+
+      // Handle Immediate Direction Reversal
+      if (this.nextDirX !== 0 && this.nextDirX === -this.dirX) {
+        this.dirX = this.nextDirX;
+        this.dirY = 0;
+      } else if (this.nextDirY !== 0 && this.nextDirY === -this.dirY) {
+        this.dirY = this.nextDirY;
+        this.dirX = 0;
+      }
+
+      // Pre-turn Directional Buffering at Tile Centers
+      const tileCol = Math.floor(this.x / TILE_SIZE);
+      const tileRow = Math.floor(this.y / TILE_SIZE);
+      const centerX = tileCol * TILE_SIZE + TILE_SIZE / 2;
+      const centerY = tileRow * TILE_SIZE + TILE_SIZE / 2;
+      const distToCenter = Math.hypot(this.x - centerX, this.y - centerY);
+
+      if ((this.nextDirX !== 0 || this.nextDirY !== 0) && distToCenter < 4.5) {
+        const targetCol = tileCol + this.nextDirX;
+        const targetRow = tileRow + this.nextDirY;
+        if (canWalk(targetCol, targetRow, false)) {
+          // Snap perpendicular axis and adopt new direction
+          if (this.nextDirX !== 0) {
+            this.y = centerY;
+            this.dirX = this.nextDirX;
+            this.dirY = 0;
+          } else {
+            this.x = centerX;
+            this.dirY = this.nextDirY;
+            this.dirX = 0;
+          }
+          this.nextDirX = 0;
+          this.nextDirY = 0;
+        }
+      }
+
+      // Check for wall collision ahead in current direction
+      if (this.dirX !== 0 || this.dirY !== 0) {
+        const nextCol = tileCol + this.dirX;
+        const nextRow = tileRow + this.dirY;
+
+        // If approaching tile center and next tile is a wall, stop at center
+        const approachingCenter =
+          (this.dirX > 0 && this.x >= centerX) ||
+          (this.dirX < 0 && this.x <= centerX) ||
+          (this.dirY > 0 && this.y >= centerY) ||
+          (this.dirY < 0 && this.y <= centerY);
+
+        if (approachingCenter && !canWalk(nextCol, nextRow, false)) {
+          this.x = centerX;
+          this.y = centerY;
+          this.dirX = 0;
+          this.dirY = 0;
+        }
+      }
+
+      // Move player
+      this.x += this.dirX * this.speed;
+      this.y += this.dirY * this.speed;
+
+      // Update rotation angle
+      if (this.dirX > 0) this.angle = 0;
+      else if (this.dirX < 0) this.angle = Math.PI;
+      else if (this.dirY > 0) this.angle = Math.PI / 2;
+      else if (this.dirY < 0) this.angle = -Math.PI / 2;
+
+      // Animate chomping wedge mouth (0 to 45 degrees)
+      if (this.dirX !== 0 || this.dirY !== 0) {
+        if (this.mouthOpening) {
+          this.mouthAngle += 0.09;
+          if (this.mouthAngle >= 0.785) { // 45 deg
+            this.mouthAngle = 0.785;
+            this.mouthOpening = false;
+          }
+        } else {
+          this.mouthAngle -= 0.09;
+          if (this.mouthAngle <= 0.05) {
+            this.mouthAngle = 0.05;
+            this.mouthOpening = true;
+          }
+        }
+      }
+
+      // Row 17 Side Warp Tunnel wrapping
+      if (tileRow === 17) {
+        if (this.x < -TILE_SIZE / 2) {
+          this.x = LOGICAL_WIDTH + TILE_SIZE / 2 - 2;
+        } else if (this.x > LOGICAL_WIDTH + TILE_SIZE / 2) {
+          this.x = -TILE_SIZE / 2 + 2;
+        }
+      }
+
+      // Collectible detection
+      const curCol = Math.round((this.x - TILE_SIZE / 2) / TILE_SIZE);
+      const curRow = Math.round((this.y - TILE_SIZE / 2) / TILE_SIZE);
+      if (curRow >= 0 && curRow < ROWS && curCol >= 0 && curCol < COLS) {
+        const item = maze[curRow][curCol];
+        if (item === '.') {
+          maze[curRow][curCol] = ' ';
+          score += 10;
+          pelletsRemaining--;
+          audio.playChomp();
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('snakmanr_hi', highScore.toString());
+          }
+        } else if (item === 'O') {
+          maze[curRow][curCol] = ' ';
+          score += 50;
+          pelletsRemaining--;
+          audio.playDrinkSlurp();
+          immunityTime = 9.0; // 9 seconds of Executive Immunity!
+          ghostStreakScore = 200;
+          ghosts.forEach(g => {
+            if (g.state === 'CHASE') {
+              g.state = 'FRIGHTENED';
+              // Reverse direction on frightened
+              g.dirX = -g.dirX;
+              g.dirY = -g.dirY;
+            }
+          });
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('snakmanr_hi', highScore.toString());
+          }
+        }
+      }
+    }
+  };
+
+  function canWalk(col, row, isGhost = false) {
+    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return false;
+    const tile = maze[row][col];
+    if (tile === 'W') return false;
+    if (tile === 'D') return isGhost; // Only ghosts can traverse security gate
+    if (tile === 'G') return isGhost; // Only ghosts can enter Evidence Locker
+    return true;
+  }
+
+  // --- 7. EVIDENCE LOCKER GHOSTS (FEDERAL AGENTS) ---
+  const GHOST_DEFS = [
+    { name: "Special Agent Jack", color: "#3b82f6", releaseTime: 0.5, homeCol: 13, homeRow: 17 },
+    { name: "Agent Fani", color: "#ec4899", releaseTime: 3.5, homeCol: 12, homeRow: 17 },
+    { name: "Agent Letitia", color: "#f43f5e", releaseTime: 7.0, homeCol: 14, homeRow: 17 },
+    { name: "Agent Alvin", color: "#06b6d4", releaseTime: 11.0, homeCol: 15, homeRow: 17 }
+  ];
+
+  class Ghost {
+    constructor(def) {
+      this.name = def.name;
+      this.color = def.color;
+      this.releaseTime = def.releaseTime;
+      this.homeCol = def.homeCol;
+      this.homeRow = def.homeRow;
+      this.reset();
+    }
+
+    reset() {
+      this.x = this.homeCol * TILE_SIZE + TILE_SIZE / 2;
+      this.y = this.homeRow * TILE_SIZE + TILE_SIZE / 2;
+      this.dirX = 0;
+      this.dirY = -1;
+      this.state = 'IN_LOCKER'; // IN_LOCKER, LEAVING_LOCKER, CHASE, FRIGHTENED, RETURNING
+      this.timer = 0;
+      this.speed = 1.95;
+    }
+
+    update(dt) {
+      this.timer += dt;
+
+      // State: In Locker bouncing
+      if (this.state === 'IN_LOCKER') {
+        const topY = 16.5 * TILE_SIZE;
+        const botY = 17.5 * TILE_SIZE;
+        this.y += this.dirY * 1.0;
+        if (this.y <= topY) this.dirY = 1;
+        if (this.y >= botY) this.dirY = -1;
+
+        if (this.timer >= this.releaseTime) {
+          this.state = 'LEAVING_LOCKER';
+        }
+        return;
+      }
+
+      // State: Exiting the Sub-Basement Evidence Locker
+      if (this.state === 'LEAVING_LOCKER') {
+        const targetX = 13.5 * TILE_SIZE; // Door center
+        const targetY = 14.5 * TILE_SIZE; // Just outside gate
+
+        if (Math.abs(this.x - targetX) > 1.5) {
+          this.x += Math.sign(targetX - this.x) * 1.5;
+        } else if (this.y > targetY) {
+          this.x = targetX;
+          this.y -= 1.5;
+        } else {
+          this.y = targetY;
+          this.state = (immunityTime > 0) ? 'FRIGHTENED' : 'CHASE';
+          this.dirX = Math.random() < 0.5 ? -1 : 1;
+          this.dirY = 0;
+        }
+        return;
+      }
+
+      // Speed regulation based on state
+      if (this.state === 'RETURNING') {
+        this.speed = 3.6; // Eyes sprint back to locker
+      } else if (this.state === 'FRIGHTENED') {
+        this.speed = 1.25; // Terrified slow speed
+      } else {
+        this.speed = 1.95 + (round - 1) * 0.15;
+      }
+
+      // Navigation at Tile Intersections
+      const tileCol = Math.floor(this.x / TILE_SIZE);
+      const tileRow = Math.floor(this.y / TILE_SIZE);
+      const centerX = tileCol * TILE_SIZE + TILE_SIZE / 2;
+      const centerY = tileRow * TILE_SIZE + TILE_SIZE / 2;
+      const distToCenter = Math.hypot(this.x - centerX, this.y - centerY);
+
+      if (distToCenter < this.speed) {
+        this.x = centerX;
+        this.y = centerY;
+
+        // If RETURNING and reached locker door
+        if (this.state === 'RETURNING') {
+          if (tileRow === 15 && (tileCol === 13 || tileCol === 14)) {
+            this.state = 'IN_LOCKER';
+            this.timer = 0;
+            this.releaseTime = 2.0;
+            this.dirX = 0;
+            this.dirY = 1;
+            return;
+          }
+        }
+
+        // Determine target destination
+        let targetX = player.x;
+        let targetY = player.y;
+
+        if (this.state === 'RETURNING') {
+          targetX = 13.5 * TILE_SIZE;
+          targetY = 15 * TILE_SIZE;
+        } else if (this.state === 'FRIGHTENED') {
+          // Move randomly or away from player
+          targetX = (this.x > player.x) ? LOGICAL_WIDTH : 0;
+          targetY = (this.y > player.y) ? LOGICAL_HEIGHT : 0;
+        } else {
+          // Specific Agent AI profiles
+          if (this.name === "Agent Fani") {
+            // Ambush: 4 tiles ahead of player
+            targetX = player.x + player.dirX * 4 * TILE_SIZE;
+            targetY = player.y + player.dirY * 4 * TILE_SIZE;
+          } else if (this.name === "Agent Letitia") {
+            // Patrol corner when far, chase when close
+            const d = Math.hypot(this.x - player.x, this.y - player.y);
+            if (d > 8 * TILE_SIZE) {
+              targetX = 2 * TILE_SIZE;
+              targetY = 31 * TILE_SIZE;
+            }
+          } else if (this.name === "Agent Alvin") {
+            // Unpredictable process server roaming
+            if (Math.random() < 0.3) {
+              targetX = Math.random() * LOGICAL_WIDTH;
+              targetY = Math.random() * LOGICAL_HEIGHT;
+            }
+          }
+        }
+
+        // Possible directional options (prevent 180 turnaround unless dead-ended)
+        const dirs = [
+          { x: 0, y: -1 }, // Up
+          { x: -1, y: 0 }, // Left
+          { x: 0, y: 1 },  // Down
+          { x: 1, y: 0 }   // Right
+        ];
+
+        let bestDir = null;
+        let bestDist = Infinity;
+
+        for (const d of dirs) {
+          // Do not reverse unless forced
+          if (d.x === -this.dirX && d.y === -this.dirY) continue;
+
+          const nCol = tileCol + d.x;
+          const nRow = tileRow + d.y;
+          const isReturning = (this.state === 'RETURNING');
+
+          if (canWalk(nCol, nRow, isReturning)) {
+            const nextX = nCol * TILE_SIZE + TILE_SIZE / 2;
+            const nextY = nRow * TILE_SIZE + TILE_SIZE / 2;
+            const dist = Math.hypot(nextX - targetX, nextY - targetY);
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestDir = d;
+            }
+          }
+        }
+
+        // If trapped, allow 180 reverse
+        if (!bestDir) {
+          bestDir = { x: -this.dirX, y: -this.dirY };
+        }
+
+        this.dirX = bestDir.x;
+        this.dirY = bestDir.y;
+      }
+
+      this.x += this.dirX * this.speed;
+      this.y += this.dirY * this.speed;
+
+      // Row 17 warp tunnel
+      if (tileRow === 17) {
+        if (this.x < -TILE_SIZE / 2) {
+          this.x = LOGICAL_WIDTH + TILE_SIZE / 2 - 2;
+        } else if (this.x > LOGICAL_WIDTH + TILE_SIZE / 2) {
+          this.x = -TILE_SIZE / 2 + 2;
+        }
+      }
+    }
+  }
+
+  const ghosts = GHOST_DEFS.map(def => new Ghost(def));
+
+  // --- 8. RENDERING PROCEDURAL SPRITES & ASSETS ---
+
+  // A. Procedural Mini-Burger (. pellet)
+  function drawMiniBurger(ctx, cx, cy) {
+    ctx.save();
+    // Top Bun (Golden Bun #d97706)
+    ctx.fillStyle = "#d97706";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - 2, 5.5, 3.5, 0, Math.PI, 0);
+    ctx.fill();
+
+    // Sesame Seeds
+    ctx.fillStyle = "#fef08a";
+    ctx.fillRect(cx - 2, cy - 4, 1.2, 1);
+    ctx.fillRect(cx + 1.5, cy - 3.5, 1.2, 1);
+
+    // Ketchup sliver (#ef4444)
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(cx - 5, cy - 0.5, 10, 1.5);
+
+    // Juicy Brown Patty (#451a03)
+    ctx.fillStyle = "#451a03";
+    ctx.fillRect(cx - 5.5, cy + 0.8, 11, 2.2);
+
+    // Bottom Bun (#b45309)
+    ctx.fillStyle = "#b45309";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 3.2, 5, 2, 0, 0, Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // B. Procedural Diet Drink (Power Pellet 'O')
+  let drinkGlow = 0;
+  function drawDietDrink(ctx, cx, cy) {
+    ctx.save();
+    drinkGlow += 0.05;
+    const pulse = Math.sin(drinkGlow) * 1.5;
+
+    // Outer radial aura
+    ctx.fillStyle = "rgba(251, 191, 36, 0.25)";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10 + pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Red-and-White Striped Straw poking out top right
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(cx + 1, cy - 4);
+    ctx.lineTo(cx + 5, cy - 11);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#ef4444";
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(cx + 1, cy - 4);
+    ctx.lineTo(cx + 5, cy - 11);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Silver Cup Lid
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillRect(cx - 5.5, cy - 4.5, 11, 2.5);
+
+    // Cup Body (Tapered Paper Cup)
+    ctx.fillStyle = "#e2e8f0";
+    ctx.beginPath();
+    ctx.moveTo(cx - 5, cy - 2);
+    ctx.lineTo(cx + 5, cy - 2);
+    ctx.lineTo(cx + 3.5, cy + 7);
+    ctx.lineTo(cx - 3.5, cy + 7);
+    ctx.closePath();
+    ctx.fill();
+
+    // Patriot Blue Label with "DIET" or "D"
+    ctx.fillStyle = "#1e3a8a";
+    ctx.fillRect(cx - 4, cy - 0.5, 8, 4);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 4px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("DIET", cx, cy + 1.5);
+
+    ctx.restore();
+  }
+
+  // C. Procedural Pac-Don Player Sprite
+  function drawPacDon(ctx, x, y, angle, mouthAngle) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Radiant Executive Immunity Aura
+    if (immunityTime > 0) {
+      ctx.save();
+      const auraPulse = Math.sin(Date.now() * 0.015) * 4;
+      ctx.strokeStyle = "rgba(253, 224, 71, 0.8)";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 16 + auraPulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.rotate(angle);
+
+    const R = 11.5;
+
+    // Intense Orange Circular Body (#f59e0b to #ea580c)
+    const grad = ctx.createRadialGradient(-2, -3, 2, 0, 0, R);
+    grad.addColorStop(0, "#fb923c");
+    grad.addColorStop(0.7, "#f59e0b");
+    grad.addColorStop(1, "#ea580c");
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    // Mouth wedge oscillation
+    ctx.arc(0, 0, R, mouthAngle, Math.PI * 2 - mouthAngle, false);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pale White Raccoon Circles (#fef08a) around eye slots
+    ctx.fillStyle = "#fef08a";
+    ctx.beginPath();
+    ctx.ellipse(3, -5.5, 4.2, 3, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Squinting Eye Slot (#1e293b)
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.ellipse(4, -5.5, 2.2, 1, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Signature Swooping Golden Pompadour Hair (#fde047 / #eab308)
+    ctx.fillStyle = "#fde047";
+    ctx.beginPath();
+    // Sweeping aerodynamic golden crest swooping back and upward
+    ctx.moveTo(-10, -2);
+    ctx.quadraticCurveTo(-11, -12, -2, -15);
+    ctx.quadraticCurveTo(6, -17, 10, -11);
+    ctx.quadraticCurveTo(12, -7, 6, -8);
+    ctx.quadraticCurveTo(2, -9, -3, -7);
+    ctx.quadraticCurveTo(-8, -6, -10, -2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sculpted Hair Crest Strands
+    ctx.strokeStyle = "#ca8a04";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-6, -11);
+    ctx.quadraticCurveTo(2, -14, 8, -10);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // D. Procedural Federal Agent (Ghost) Sprite
+  function drawGhost(ctx, ghost) {
+    ctx.save();
+    ctx.translate(ghost.x, ghost.y);
+
+    const R = 9.5;
+    let bodyColor = ghost.color;
+
+    // Terrified Subpoena Agent during Executive Immunity
+    if (ghost.state === 'FRIGHTENED') {
+      const flash = (immunityTime < 2.5 && Math.sin(Date.now() * 0.03) > 0);
+      bodyColor = flash ? "#f8fafc" : "#1e3a8a";
+    }
+
+    if (ghost.state !== 'RETURNING') {
+      // Classic Arcade Dome Body
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(0, -2, R, Math.PI, 0, false);
+      ctx.lineTo(R, 8);
+      // Tentacle scalloped bottom
+      const wave = Math.sin(Date.now() * 0.015) * 1.5;
+      ctx.lineTo(R * 0.5, 5 + wave);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-R * 0.5, 5 - wave);
+      ctx.lineTo(-R, 8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Sharp Dark Sunglasses (FBI / Secret Service Shades)
+      if (ghost.state !== 'FRIGHTENED') {
+        ctx.fillStyle = "#090d16";
+        // Left lens
+        ctx.fillRect(-6.5, -4, 5, 3.5);
+        // Right lens
+        ctx.fillRect(1.5, -4, 5, 3.5);
+        // Bridge
+        ctx.fillRect(-2, -3.5, 4, 1.2);
+
+        // White tie collar accent
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(0, 2);
+        ctx.lineTo(-2, 4);
+        ctx.lineTo(2, 4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Mini Red Tie
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.moveTo(0, 4);
+        ctx.lineTo(-1.2, 7);
+        ctx.lineTo(0, 8.5);
+        ctx.lineTo(1.2, 7);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Panicked wavy mouth when Frightened
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-5, 2);
+        ctx.lineTo(-3, 0);
+        ctx.lineTo(-1, 2);
+        ctx.lineTo(1, 0);
+        ctx.lineTo(3, 2);
+        ctx.lineTo(5, 0);
+        ctx.stroke();
+      }
+    } else {
+      // EATEN: Disembodied Dark Sunglasses Sprinting back
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(-6, -3, 5, 4);
+      ctx.fillRect(1, -3, 5, 4);
+      ctx.fillRect(-2, -2, 4, 1.5);
+      // Eye pupils glancing back
+      ctx.fillStyle = "#60a5fa";
+      ctx.fillRect(-4, -2, 2, 2);
+      ctx.fillRect(3, -2, 2, 2);
+    }
+
+    ctx.restore();
+  }
+
+  // --- 9. MAZE & BUNKER WALL DRAWING ---
+  function drawMaze() {
+    // 1. Cracked Slate Bunker Flooring (#1e293b)
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
+
+    // Subtle slate floor tile seams
+    ctx.strokeStyle = "rgba(51, 65, 85, 0.4)";
+    ctx.lineWidth = 1;
+    for (let r = 3; r <= 32; r++) {
+      ctx.beginPath();
+      ctx.moveTo(0, r * TILE_SIZE);
+      ctx.lineTo(LOGICAL_WIDTH, r * TILE_SIZE);
+      ctx.stroke();
+    }
+    for (let c = 0; c <= COLS; c++) {
+      ctx.beginPath();
+      ctx.moveTo(c * TILE_SIZE, 3 * TILE_SIZE);
+      ctx.lineTo(c * TILE_SIZE, 33 * TILE_SIZE);
+      ctx.stroke();
+    }
+
+    // Procedural slate cracks
+    ctx.strokeStyle = "rgba(15, 23, 42, 0.7)";
+    ctx.lineWidth = 1.2;
+    floorCracks.forEach(cr => {
+      ctx.beginPath();
+      ctx.moveTo(cr.x, cr.y);
+      ctx.lineTo(cr.x + cr.dx, cr.y + cr.dy);
+      ctx.stroke();
+    });
+
+    // 2. Double-Bordered Gilded Gold Moldings (#fbbf24) for Walls
+    for (let r = 3; r <= 32; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const tile = maze[r][c];
+
+        if (tile === 'W') {
+          const x = c * TILE_SIZE;
+          const y = r * TILE_SIZE;
+
+          // Rich burnished gold-bronze wall core
+          ctx.fillStyle = "#451a03";
+          ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+          // Inner metallic fill
+          ctx.fillStyle = "#78350f";
+          ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+
+          // Double gilded borders on exterior wall edges
+          const topOpen = (r > 0 && maze[r - 1][c] !== 'W');
+          const botOpen = (r < ROWS - 1 && maze[r + 1][c] !== 'W');
+          const leftOpen = (c > 0 && maze[r][c - 1] !== 'W');
+          const rightOpen = (c < COLS - 1 && maze[r][c + 1] !== 'W');
+
+          ctx.lineWidth = 2.0;
+          ctx.strokeStyle = "#fbbf24"; // Gilded gold molding
+
+          if (topOpen) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + 1);
+            ctx.lineTo(x + TILE_SIZE, y + 1);
+            ctx.stroke();
+          }
+          if (botOpen) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + TILE_SIZE - 1);
+            ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE - 1);
+            ctx.stroke();
+          }
+          if (leftOpen) {
+            ctx.beginPath();
+            ctx.moveTo(x + 1, y);
+            ctx.lineTo(x + 1, y + TILE_SIZE);
+            ctx.stroke();
+          }
+          if (rightOpen) {
+            ctx.beginPath();
+            ctx.moveTo(x + TILE_SIZE - 1, y);
+            ctx.lineTo(x + TILE_SIZE - 1, y + TILE_SIZE);
+            ctx.stroke();
+          }
+
+          // Secondary gilded inner accent line
+          ctx.strokeStyle = "rgba(254, 240, 138, 0.45)";
+          ctx.lineWidth = 1.0;
+          if (topOpen) {
+            ctx.strokeRect(x + 3, y + 3, TILE_SIZE - 6, 1);
+          }
+          if (botOpen) {
+            ctx.strokeRect(x + 3, y + TILE_SIZE - 4, TILE_SIZE - 6, 1);
+          }
+          if (leftOpen) {
+            ctx.strokeRect(x + 3, y + 3, 1, TILE_SIZE - 6);
+          }
+          if (rightOpen) {
+            ctx.strokeRect(x + TILE_SIZE - 4, y + 3, 1, TILE_SIZE - 6);
+          }
+        }
+      }
+    }
+
+    // 3. Center Ghost Pen: "Sub-Basement Evidence Locker" Plaque & Security Gate
+    const lockerX = 10 * TILE_SIZE;
+    const lockerY = 15 * TILE_SIZE;
+    const lockerW = 8 * TILE_SIZE;
+    const lockerH = 5 * TILE_SIZE;
+
+    // Security Gate Door at Row 15 (cols 12-15)
+    ctx.save();
+    const gatePulse = Math.sin(Date.now() * 0.008) * 0.3 + 0.7;
+    ctx.strokeStyle = `rgba(251, 191, 36, ${gatePulse})`;
+    ctx.lineWidth = 2.5;
+    // Vertical gilded security bars
+    for (let bx = 12 * TILE_SIZE + 2; bx <= 15 * TILE_SIZE + TILE_SIZE - 2; bx += 5) {
+      ctx.beginPath();
+      ctx.moveTo(bx, 15 * TILE_SIZE + 2);
+      ctx.lineTo(bx, 16 * TILE_SIZE - 2);
+      ctx.stroke();
+    }
+    // Cross security bar
+    ctx.beginPath();
+    ctx.moveTo(12 * TILE_SIZE, 15.5 * TILE_SIZE);
+    ctx.lineTo(16 * TILE_SIZE, 15.5 * TILE_SIZE);
+    ctx.stroke();
+    ctx.restore();
+
+    // Evidence Locker Interior Label Plaque
+    ctx.save();
+    ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+    ctx.fillRect(lockerX + 8, lockerY + 1.2 * TILE_SIZE, lockerW - 16, 2.2 * TILE_SIZE);
+    ctx.strokeStyle = "#fbbf24";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lockerX + 8, lockerY + 1.2 * TILE_SIZE, lockerW - 16, 2.2 * TILE_SIZE);
+
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "bold 8px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("SUB-BASEMENT", 14 * TILE_SIZE, lockerY + 2.0 * TILE_SIZE);
+    ctx.fillStyle = "#fef08a";
+    ctx.font = "bold 7px sans-serif";
+    ctx.fillText("EVIDENCE LOCKER", 14 * TILE_SIZE, lockerY + 2.8 * TILE_SIZE);
+    ctx.restore();
+
+    // 4. Row 17 Warp Tunnels Visual Chevrons
+    ctx.save();
+    ctx.fillStyle = "rgba(251, 191, 36, 0.6)";
+    ctx.font = "bold 10px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    // Left Warp Portal
+    ctx.fillText("◀◀", 10, 17.5 * TILE_SIZE);
+    // Right Warp Portal
+    ctx.fillText("▶▶", LOGICAL_WIDTH - 10, 17.5 * TILE_SIZE);
+    ctx.restore();
+
+    // 5. Draw Collectibles (Burgers & Diet Drinks)
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const item = maze[r][c];
+        const cx = c * TILE_SIZE + TILE_SIZE / 2;
+        const cy = r * TILE_SIZE + TILE_SIZE / 2;
+
+        if (item === '.') {
+          drawMiniBurger(ctx, cx, cy);
+        } else if (item === 'O') {
+          drawDietDrink(ctx, cx, cy);
+        }
+      }
+    }
+  }
+
+  // --- 10. HUD DISPLAY & OVERLAYS ---
+  function drawHUD() {
+    ctx.save();
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "bold 12px 'Courier New', monospace";
+
+    // Top Row HUD
+    ctx.textAlign = "left";
+    ctx.fillText(`1UP SCORE`, 16, 18);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${score.toString().padStart(6, '0')}`, 16, 34);
+
+    ctx.fillStyle = "#fbbf24";
+    ctx.textAlign = "center";
+    ctx.fillText("HIGH SCORE", LOGICAL_WIDTH / 2, 18);
+    ctx.fillStyle = "#fde047";
+    ctx.fillText(`${highScore.toString().padStart(6, '0')}`, LOGICAL_WIDTH / 2, 34);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText(`ROUND`, LOGICAL_WIDTH - 16, 18);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`${round}`, LOGICAL_WIDTH - 16, 34);
+
+    // Executive Immunity Banner
+    if (immunityTime > 0) {
+      const bannerPulse = Math.sin(Date.now() * 0.02) > 0;
+      ctx.fillStyle = bannerPulse ? "#fde047" : "#f59e0b";
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(`★ EXECUTIVE IMMUNITY: ${immunityTime.toFixed(1)}s ★`, LOGICAL_WIDTH / 2, 52);
+    }
+
+    // Bottom Row: Lives & Pellets
+    const botY = 34.5 * TILE_SIZE;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "bold 11px sans-serif";
+    ctx.fillText("LIVES:", 16, botY);
+
+    // Mini Pac-Don Life Icons
+    for (let i = 0; i < lives; i++) {
+      drawPacDon(ctx, 70 + i * 22, botY - 3, 0, 0.35);
+    }
+
+    // Burger Count Remaining
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText(`BURGERS: ${pelletsRemaining}`, LOGICAL_WIDTH - 16, botY);
+
+    // Floating Popup Scores
+    for (let i = popupScores.length - 1; i >= 0; i--) {
+      const p = popupScores[i];
+      p.y -= 0.5;
+      p.alpha -= 0.015;
+      ctx.fillStyle = `rgba(253, 224, 71, ${p.alpha})`;
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(`+${p.text}`, p.x, p.y);
+      if (p.alpha <= 0) popupScores.splice(i, 1);
+    }
+
+    // Game Over / Victory Screen Modals
+    if (gameOver) {
+      ctx.fillStyle = "rgba(11, 15, 25, 0.88)";
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(60, 260, LOGICAL_WIDTH - 120, 180);
+
+      ctx.fillStyle = "#ef4444";
+      ctx.font = "bold 32px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("SUBPOENA SERVED", LOGICAL_WIDTH / 2, 315);
+
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText(`FINAL SCORE: ${score}`, LOGICAL_WIDTH / 2, 355);
+
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 14px monospace";
+      ctx.fillText("TAP OR PRESS SPACE TO RETRY", LOGICAL_WIDTH / 2, 405);
+    } else if (victory) {
+      ctx.fillStyle = "rgba(11, 15, 25, 0.88)";
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(60, 260, LOGICAL_WIDTH - 120, 180);
+
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 30px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("EVIDENCE CONSUMED!", LOGICAL_WIDTH / 2, 315);
+
+      ctx.fillStyle = "#fde047";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText(`TOTAL SCORE: ${score}`, LOGICAL_WIDTH / 2, 355);
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 14px monospace";
+      ctx.fillText("TAP TO ADVANCE TO NEXT ROUND", LOGICAL_WIDTH / 2, 405);
+    }
+
+    ctx.restore();
+  }
+
+  // --- 11. GAME LOGIC & COLLISION ---
+  function updateGame(dt) {
+    if (gameOver || victory) return;
+
+    // Executive Immunity timer countdown
+    if (immunityTime > 0) {
+      immunityTime -= dt;
+      if (immunityTime <= 0) {
+        immunityTime = 0;
+        ghosts.forEach(g => {
+          if (g.state === 'FRIGHTENED') g.state = 'CHASE';
+        });
+      }
+    }
+
+    player.update(dt);
+    ghosts.forEach(g => g.update(dt));
+
+    // Player <-> Ghost Collision Checking
+    for (const g of ghosts) {
+      const dist = Math.hypot(player.x - g.x, player.y - g.y);
+      if (dist < TILE_SIZE * 0.75) {
+        if (g.state === 'FRIGHTENED') {
+          // Pac-Don eats the terrified ghost!
+          g.state = 'RETURNING';
+          score += ghostStreakScore;
+          popupScores.push({ text: ghostStreakScore, x: g.x, y: g.y, alpha: 1.0 });
+          audio.playGhostEaten();
+          ghostStreakScore *= 2;
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('snakmanr_hi', highScore.toString());
+          }
+        } else if (g.state === 'CHASE') {
+          // Pac-Don caught by agent
+          lives--;
+          audio.playDeath();
+          if (lives <= 0) {
+            gameOver = true;
+          } else {
+            // Reset player and ghosts positions
+            player.reset();
+            ghosts.forEach(gh => gh.reset());
+          }
+          break;
+        }
+      }
+    }
+
+    // Win condition: All pellets and drinks consumed
+    if (pelletsRemaining <= 0) {
+      victory = true;
+    }
+  }
+
+  function resetRound(nextRound = false) {
+    if (nextRound) round++;
+    else {
+      round = 1;
+      score = 0;
+      lives = 3;
+    }
+    maze = buildGrid();
+    totalPellets = countPellets(maze);
+    pelletsRemaining = totalPellets;
+    immunityTime = 0;
+    gameOver = false;
+    victory = false;
+    popupScores = [];
+    player.reset();
+    ghosts.forEach(g => g.reset());
+  }
+
+  // --- 12. INPUT CONTROLLER (KEYBOARD & TOUCH) ---
+  function handleDirectionInput(dx, dy) {
+    audio.init();
+    audio.resume();
+    gameStarted = true;
+
+    if (gameOver) {
+      resetRound(false);
+      return;
+    }
+    if (victory) {
+      resetRound(true);
+      return;
+    }
+
+    player.nextDirX = dx;
+    player.nextDirY = dy;
+  }
+
+  // Keyboard controls (Arrows & WASD)
+  window.addEventListener('keydown', (e) => {
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'w':
+      case 'W':
+        e.preventDefault();
+        handleDirectionInput(0, -1);
+        break;
+      case 'ArrowDown':
+      case 's':
+      case 'S':
+        e.preventDefault();
+        handleDirectionInput(0, 1);
+        break;
+      case 'ArrowLeft':
+      case 'a':
+      case 'A':
+        e.preventDefault();
+        handleDirectionInput(-1, 0);
+        break;
+      case 'ArrowRight':
+      case 'd':
+      case 'D':
+        e.preventDefault();
+        handleDirectionInput(1, 0);
+        break;
+      case ' ':
+        e.preventDefault();
+        if (gameOver) resetRound(false);
+        else if (victory) resetRound(true);
+        break;
+    }
+  });
+
+  // Touch Swipe Gesture Detection on Canvas
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    audio.init();
+    audio.resume();
+    if (gameOver) { resetRound(false); return; }
+    if (victory) { resetRound(true); return; }
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if (!e.changedTouches || e.changedTouches.length === 0) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    if (Math.max(absX, absY) > 18) { // swipe threshold
+      if (absX > absY) {
+        handleDirectionInput(dx > 0 ? 1 : -1, 0);
+      } else {
+        handleDirectionInput(0, dy > 0 ? 1 : -1);
+      }
+    }
+  }, { passive: false });
+
+  // Virtual Touch D-Pad Buttons
+  document.getElementById('t-up').addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    handleDirectionInput(0, -1);
+  });
+  document.getElementById('t-down').addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    handleDirectionInput(0, 1);
+  });
+  document.getElementById('t-left').addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    handleDirectionInput(-1, 0);
+  });
+  document.getElementById('t-right').addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    handleDirectionInput(1, 0);
+  });
+
+  // General click/tap wake-up for Web Audio
+  window.addEventListener('pointerdown', () => {
+    audio.init();
+    audio.resume();
+  });
+
+  // --- 13. MAIN GAME LOOP ---
+  let lastTime = performance.now();
+
+  function gameLoop(now) {
+    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+
+    updateGame(dt);
+
+    // Render pass
+    ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    drawMaze();
+    ghosts.forEach(g => drawGhost(ctx, g));
+    drawPacDon(ctx, player.x, player.y, player.angle, player.mouthAngle);
+    drawHUD();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  requestAnimationFrame(gameLoop);
+
+})();
+</script>
+</body>
+</html>

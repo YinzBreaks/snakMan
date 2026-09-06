@@ -1,4 +1,4 @@
-# SnakManr (The Resistance Arcade Cabinet 3)
+# SnakMan (The Resistance Arcade Cabinet 3)
 
 A standalone, production-ready single-file HTML5 Canvas arcade game with zero external dependencies.
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>⚡ THE RESISTANCE ARCADE // CABINET 3: BUNKER MUNCHER</title>
+  <title>⚡ THE RESISTANCE ARCADE // CABINET 3: SNAKMAN</title>
   <style>
     * {
       box-sizing: border-box;
@@ -357,7 +357,7 @@
     <!-- Top Marquee Standard -->
     <div id="marquee">
       <div class="cabinet-title">
-        <span>⚡</span> THE RESISTANCE ARCADE // CABINET 3: BUNKER MUNCHER
+        <span>⚡</span> THE RESISTANCE ARCADE // CABINET 3: SNAKMAN
       </div>
     </div>
 
@@ -817,8 +817,8 @@
   let gameState = 'START';
 
   let score = 0;
-  // High score key specified: bunker_muncher_high
-  let highScore = parseInt(localStorage.getItem('bunker_muncher_high') || localStorage.getItem('snakmanr_hi') || '0', 10);
+  // High score key compatibility for SnakMan
+  let highScore = parseInt(localStorage.getItem('snakman_high') || localStorage.getItem('bunker_muncher_high') || localStorage.getItem('snakmanr_hi') || '0', 10);
   let lives = 3;
   let round = 1;
   let enemyGlobalSpeedMult = 1.0;
@@ -905,6 +905,7 @@
   function updateHighScore() {
     if (score > highScore) {
       highScore = score;
+      localStorage.setItem('snakman_high', highScore.toString());
       localStorage.setItem('bunker_muncher_high', highScore.toString());
     }
   }
@@ -1952,9 +1953,9 @@
       ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
 
       ctx.fillStyle = "#fbbf24";
-      ctx.font = "bold 26px sans-serif";
+      ctx.font = "bold 28px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("BUNKER MUNCHER", LOGICAL_WIDTH / 2, 280);
+      ctx.fillText("SNAKMAN", LOGICAL_WIDTH / 2, 280);
 
       ctx.fillStyle = "#38bdf8";
       ctx.font = "bold 11px monospace";

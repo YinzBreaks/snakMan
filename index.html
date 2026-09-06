@@ -720,12 +720,32 @@
         });
       } catch (e) {}
     }
+
+    playBonusItemChime() {
+      if (!this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const freqs = [523.25, 659.25, 783.99, 1046.50, 1567.98];
+        freqs.forEach((f, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, now + idx * 0.055);
+          gain.gain.setValueAtTime(0.18, now + idx * 0.055);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.28);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.055);
+          osc.stop(now + idx * 0.055 + 0.3);
+        });
+      } catch (e) {}
+    }
   }
 
   const audio = new SoundEngine();
 
-  // --- 3. BUNKER MAZE & TILE MAP GENERATION ---
-  const HALF_MAP = [
+  // --- 3. MULTIPLE BUNKER BOARDS & THEMES ---
+  const HALF_MAP_1 = [
     "              ", // 0  HUD
     "              ", // 1  HUD
     "              ", // 2  HUD
@@ -764,10 +784,187 @@
     "              "  // 35 HUD
   ];
 
-  function buildGrid() {
+  const HALF_MAP_2 = [
+    "              ", // 0
+    "              ", // 1
+    "              ", // 2
+    "WWWWWWWWWWWWWW", // 3
+    "WO...W......OW", // 4  Drinks
+    "W.WW.W.WWWW.WW", // 5
+    "W.WW...WWWW...", // 6  Tactical crossover
+    "W....W....WW.W", // 7
+    "WWWW.WWWW.WW.W", // 8
+    "WWWW.WWWW.WW.W", // 9
+    "W........W....", // 10 Command console ring
+    "W.WWWW.WWWWWW ", // 11
+    "W.WWWW.WWWWWW ", // 12
+    "W....W.WW     ", // 13
+    "WWWW.W.WW     ", // 14
+    "     W.WW WDDD", // 15
+    "WWWWWW.WW WGGG", // 16
+    "TTTTTT.   WGGG", // 17 Warp tunnel
+    "WWWWWW.WW WGGG", // 18
+    "     W.WW WWWW", // 19
+    "     W.WW     ", // 20
+    "WWWWWW.WW WWWW", // 21
+    "W....W.WW.....", // 22
+    "W.WW.W.WW.WWW.", // 23
+    "W.WW......WWW.", // 24
+    "W.WW.WW...... ", // 25 Player spawn
+    "W....WW.WWWW.W", // 26
+    "WWWW.WW.WWWW.W", // 27
+    "WO...W...W....", // 28
+    "W.WWWWWW.WWWWW", // 29
+    "W.WWWWWW.WWWWW", // 30
+    "W............ ", // 31
+    "WWWWWWWWWWWWWW", // 32
+    "              ", // 33
+    "              ", // 34
+    "              "  // 35
+  ];
+
+  const HALF_MAP_3 = [
+    "              ", // 0
+    "              ", // 1
+    "              ", // 2
+    "WWWWWWWWWWWWWW", // 3
+    "WO..WW....WWOW", // 4  Twin gold drink suites
+    "W.W.WW.WW.WW.W", // 5
+    "W............W", // 6  Grand ballroom open hall
+    "W.WWWW.WW.WW.W", // 7
+    "W.WWWW.WW.WW.W", // 8
+    "W......WW.....", // 9
+    "WWWW.WWWWWWWW ", // 10 Elevator lobbies
+    "WWWW.WWWWWWWW ", // 11
+    "     W.WWWWWW ", // 12
+    "     W.WW     ", // 13
+    "WWWWWW.WW     ", // 14
+    "     W.WW WDDD", // 15
+    "WWWWWW.WW WGGG", // 16
+    "TTTTTT.   WGGG", // 17 Warp tunnel
+    "WWWWWW.WW WGGG", // 18
+    "     W.WW WWWW", // 19
+    "     W.WW     ", // 20
+    "WWWWWW.WW WWWW", // 21
+    "W.............", // 22
+    "W.WW.WWWWWWWW.", // 23
+    "W.WW.WWWWWWWW.", // 24
+    "W....WW...... ", // 25 Player spawn
+    "WWWW.WW.WW.WWW", // 26
+    "WWWW.WW.WW.WWW", // 27
+    "WO...WW.......", // 28
+    "W.WWWWWWWWWW.W", // 29
+    "W.WWWWWWWWWW.W", // 30
+    "W............ ", // 31
+    "WWWWWWWWWWWWWW", // 32
+    "              ", // 33
+    "              ", // 34
+    "              "  // 35
+  ];
+
+  const HALF_MAP_4 = [
+    "              ", // 0
+    "              ", // 1
+    "              ", // 2
+    "WWWWWWWWWWWWWW", // 3
+    "WO...WW...W.OW", // 4  Drinks
+    "WWWW.WW.W.W.WW", // 5
+    "W.......W.....", // 6
+    "W.WWWWW.WWWW.W", // 7
+    "W.WWWWW.WWWW.W", // 8
+    "W....WW.......", // 9
+    "WWWW.WW.WWWWW ", // 10
+    "WWWW.WW.WWWWW ", // 11
+    "     W..WWWWW ", // 12
+    "     W.WW     ", // 13
+    "WWWWWW.WW     ", // 14
+    "     W.WW WDDD", // 15
+    "WWWWWW.WW WGGG", // 16
+    "TTTTTT.   WGGG", // 17 Warp tunnel
+    "WWWWWW.WW WGGG", // 18
+    "     W.WW WWWW", // 19
+    "     W.WW     ", // 20
+    "WWWWWW.WW WWWW", // 21
+    "W.............", // 22
+    "W.WWWW.WWWWWW.", // 23
+    "W.WWWW.WWWWWW.", // 24
+    "W....WW...... ", // 25 Player spawn
+    "W.WW.WW.WWWW.W", // 26
+    "W.WW.WW.WWWW.W", // 27
+    "WO...WW.......", // 28
+    "WWWW.WWWWWWW.W", // 29
+    "WWWW.WWWWWWW.W", // 30
+    "W............ ", // 31
+    "WWWWWWWWWWWWWW", // 32
+    "              ", // 33
+    "              ", // 34
+    "              "  // 35
+  ];
+
+  const BOARDS = [
+    {
+      name: "MAR-A-LAGO BUNKER",
+      subName: "SECRET SUB-BASEMENT & BALLROOM",
+      bgColor: "#1e293b",
+      gridColor: "rgba(51, 65, 85, 0.4)",
+      wallFillDark: "#451a03",
+      wallFillLight: "#78350f",
+      wallStroke: "#fbbf24",
+      wallHighlight: "rgba(254, 240, 138, 0.45)",
+      plaqueTop: "MAR-A-LAGO",
+      plaqueBot: "EVIDENCE LOCKER",
+      halfMap: HALF_MAP_1
+    },
+    {
+      name: "SITUATION ROOM",
+      subName: "WEST WING SECURE INTEL LABYRINTH",
+      bgColor: "#081325",
+      gridColor: "rgba(30, 58, 138, 0.35)",
+      wallFillDark: "#0f172a",
+      wallFillLight: "#1e293b",
+      wallStroke: "#38bdf8",
+      wallHighlight: "rgba(147, 197, 253, 0.45)",
+      plaqueTop: "WEST WING",
+      plaqueBot: "INTEL LOCKER",
+      halfMap: HALF_MAP_2
+    },
+    {
+      name: "TRUMP TOWER PENTHOUSE",
+      subName: "5TH AVE GOLD-PLATED LABYRINTH",
+      bgColor: "#0f0e17",
+      gridColor: "rgba(250, 204, 21, 0.2)",
+      wallFillDark: "#3b0764",
+      wallFillLight: "#581c87",
+      wallStroke: "#facc15",
+      wallHighlight: "rgba(254, 240, 138, 0.5)",
+      plaqueTop: "PENTHOUSE",
+      plaqueBot: "PRIVATE VAULT",
+      halfMap: HALF_MAP_3
+    },
+    {
+      name: "BEDMINSTER VAULT",
+      subName: "SUBTERRANEAN GOLF ARCHIVE",
+      bgColor: "#041d14",
+      gridColor: "rgba(16, 185, 129, 0.25)",
+      wallFillDark: "#064e3b",
+      wallFillLight: "#047857",
+      wallStroke: "#34d399",
+      wallHighlight: "rgba(167, 243, 208, 0.45)",
+      plaqueTop: "BEDMINSTER",
+      plaqueBot: "SECRET ARCHIVE",
+      halfMap: HALF_MAP_4
+    }
+  ];
+
+  function getCurrentBoard() {
+    return BOARDS[(round - 1) % BOARDS.length];
+  }
+
+  function buildGrid(boardDef) {
+    const board = boardDef || getCurrentBoard();
     const grid = [];
     for (let r = 0; r < ROWS; r++) {
-      const half = HALF_MAP[r];
+      const half = board.halfMap[r];
       let fullRow = "";
       for (let c = 0; c < 14; c++) {
         fullRow += half[c];
@@ -830,6 +1027,37 @@
   let immunityTime = 0;
   let ghostStreakScore = 200;
   let popupScores = [];
+
+  // Collected Trumpy Bonus Items for HUD Tracker
+  let collectedBonusItems = [];
+
+  // Bonus Item State (Pac-Man Cherries/Key equivalent)
+  const bonusItem = {
+    active: false,
+    id: '',
+    name: '',
+    points: 100,
+    x: 13.5 * TILE_SIZE,
+    y: 20.0 * TILE_SIZE,
+    timer: 0,
+    maxTimer: 10.0,
+    sparkleTimer: 0,
+    spawn1Triggered: false,
+    spawn2Triggered: false
+  };
+
+  function spawnBonusItem() {
+    const itemDef = TRUMPY_ITEMS[Math.min(round - 1, TRUMPY_ITEMS.length - 1)];
+    bonusItem.active = true;
+    bonusItem.id = itemDef.id;
+    bonusItem.name = itemDef.name;
+    bonusItem.points = itemDef.points;
+    bonusItem.timer = 0;
+    bonusItem.maxTimer = 10.0;
+    bonusItem.sparkleTimer = 0;
+    bonusItem.x = 13.5 * TILE_SIZE;
+    bonusItem.y = 20.0 * TILE_SIZE;
+  }
 
   // Death Animation State
   const deathAnim = {
@@ -1151,6 +1379,8 @@
       this.ignoresImmunity = def.ignoresImmunity;
       this.speedMult = def.speedMult;
       this.waypointIdx = 0;
+      this.lastTurnCol = -1;
+      this.lastTurnRow = -1;
       this.reset();
     }
 
@@ -1163,12 +1393,15 @@
       this.timer = 0;
       this.speed = 1.95 * this.speedMult * enemyGlobalSpeedMult;
       this.waypointIdx = 0;
+      this.lastTurnCol = -1;
+      this.lastTurnRow = -1;
     }
 
     update(dt) {
       if (deathAnim.active || gameState !== 'PLAYING') return;
       this.timer += dt;
 
+      // 1. Bobbing inside the Evidence Locker
       if (this.state === 'IN_LOCKER') {
         const topY = 16.5 * TILE_SIZE;
         const botY = 17.5 * TILE_SIZE;
@@ -1182,6 +1415,7 @@
         return;
       }
 
+      // 2. Rising through Security Gate into corridor
       if (this.state === 'LEAVING_LOCKER') {
         const targetX = 13.5 * TILE_SIZE;
         const targetY = 14.5 * TILE_SIZE;
@@ -1196,10 +1430,13 @@
           this.state = (!this.ignoresImmunity && immunityTime > 0) ? 'FRIGHTENED' : 'CHASE';
           this.dirX = Math.random() < 0.5 ? -1 : 1;
           this.dirY = 0;
+          this.lastTurnCol = Math.floor(this.x / TILE_SIZE);
+          this.lastTurnRow = 14;
         }
         return;
       }
 
+      // 3. Dynamic speeds
       const baseRoundSpeed = (1.95 + (round - 1) * 0.1) * enemyGlobalSpeedMult;
       if (this.state === 'RETURNING') {
         this.speed = 3.6;
@@ -1213,111 +1450,152 @@
       const tileRow = Math.floor(this.y / TILE_SIZE);
       const centerX = tileCol * TILE_SIZE + TILE_SIZE / 2;
       const centerY = tileRow * TILE_SIZE + TILE_SIZE / 2;
-      const distToCenter = Math.hypot(this.x - centerX, this.y - centerY);
 
-      if (distToCenter < this.speed) {
+      // Check if enemy has reached or crossed tile center
+      const reachedCenter =
+        (this.dirX > 0 && this.x >= centerX) ||
+        (this.dirX < 0 && this.x <= centerX) ||
+        (this.dirY > 0 && this.y >= centerY) ||
+        (this.dirY < 0 && this.y <= centerY) ||
+        (this.dirX === 0 && this.dirY === 0);
+
+      if (reachedCenter && (tileCol !== this.lastTurnCol || tileRow !== this.lastTurnRow)) {
         this.x = centerX;
         this.y = centerY;
+        this.lastTurnCol = tileCol;
+        this.lastTurnRow = tileRow;
 
+        // Re-entering locker if returning
         if (this.state === 'RETURNING') {
-          if (tileRow === 15 && (tileCol === 13 || tileCol === 14)) {
+          if ((tileRow === 14 || tileRow === 15) && (tileCol === 13 || tileCol === 14)) {
             this.state = 'IN_LOCKER';
             this.timer = 0;
-            this.releaseTime = 2.0;
+            this.releaseTime = 1.2;
             this.dirX = 0;
             this.dirY = 1;
+            this.lastTurnCol = -1;
+            this.lastTurnRow = -1;
             return;
           }
         }
 
-        let targetX = player.x;
-        let targetY = player.y;
-
-        if (this.state === 'RETURNING') {
-          targetX = 13.5 * TILE_SIZE;
-          targetY = 15 * TILE_SIZE;
-        } else if (this.state === 'FRIGHTENED' && !this.ignoresImmunity) {
-          targetX = (this.x > player.x) ? LOGICAL_WIDTH : 0;
-          targetY = (this.y > player.y) ? LOGICAL_HEIGHT : 0;
-        } else {
-          const fDirX = player.dirX || player.lastDirX || 1;
-          const fDirY = player.dirY || player.lastDirY || 0;
-
-          if (this.name === "Jeffrey") {
-            targetX = player.x;
-            targetY = player.y;
-          } else if (this.name === "Mohammed") {
-            targetX = player.x + fDirX * 4 * TILE_SIZE;
-            targetY = player.y + fDirY * 4 * TILE_SIZE;
-          } else if (this.name === "Charlie") {
-            const midX = player.x + fDirX * 2 * TILE_SIZE;
-            const midY = player.y + fDirY * 2 * TILE_SIZE;
-            const jeff = ghosts.find(g => g.name === "Jeffrey") || { x: player.x, y: player.y };
-            targetX = 2 * midX - jeff.x;
-            targetY = 2 * midY - jeff.y;
-          } else if (this.name === "Jose") {
-            const d = Math.hypot(this.x - player.x, this.y - player.y);
-            if (d > 8 * TILE_SIZE) {
-              targetX = player.x;
-              targetY = player.y;
-            } else {
-              targetX = 1.5 * TILE_SIZE;
-              targetY = 31.5 * TILE_SIZE;
-            }
-          } else if (this.name === "Cholesterol") {
-            const centralWaypoints = [
-              { x: 6.5 * TILE_SIZE, y: 14.5 * TILE_SIZE },
-              { x: 21.5 * TILE_SIZE, y: 14.5 * TILE_SIZE },
-              { x: 21.5 * TILE_SIZE, y: 20.5 * TILE_SIZE },
-              { x: 6.5 * TILE_SIZE, y: 20.5 * TILE_SIZE }
-            ];
-            const curWp = centralWaypoints[this.waypointIdx];
-            if (Math.hypot(this.x - curWp.x, this.y - curWp.y) < TILE_SIZE * 1.5) {
-              this.waypointIdx = (this.waypointIdx + 1) % centralWaypoints.length;
-            }
-            targetX = centralWaypoints[this.waypointIdx].x;
-            targetY = centralWaypoints[this.waypointIdx].y;
-          }
-        }
-
         const dirs = [
-          { x: 0, y: -1 },
-          { x: -1, y: 0 },
-          { x: 0, y: 1 },
-          { x: 1, y: 0 }
+          { x: 0, y: -1 }, // UP
+          { x: -1, y: 0 }, // LEFT
+          { x: 0, y: 1 },  // DOWN
+          { x: 1, y: 0 }   // RIGHT
         ];
 
-        let bestDir = null;
-        let bestDist = Infinity;
+        const isReturning = (this.state === 'RETURNING');
+        const validDirs = [];
 
         for (const d of dirs) {
-          if (d.x === -this.dirX && d.y === -this.dirY) continue;
-
-          const nCol = tileCol + d.x;
+          // Never reverse 180 degrees at intersections unless forced
+          if (d.x === -this.dirX && d.y === -this.dirY && (this.dirX !== 0 || this.dirY !== 0)) {
+            continue;
+          }
+          const nCol = (tileRow === 17) ? ((tileCol + d.x + COLS) % COLS) : (tileCol + d.x);
           const nRow = tileRow + d.y;
-          const isReturning = (this.state === 'RETURNING');
-
           if (canWalk(nCol, nRow, isReturning)) {
-            const nextX = nCol * TILE_SIZE + TILE_SIZE / 2;
-            const nextY = nRow * TILE_SIZE + TILE_SIZE / 2;
-            const dist = Math.hypot(nextX - targetX, nextY - targetY);
-            if (dist < bestDist) {
-              bestDist = dist;
-              bestDir = d;
-            }
+            validDirs.push(d);
           }
         }
 
-        if (!bestDir) {
-          bestDir = { x: -this.dirX, y: -this.dirY };
+        // Dead end: allow 180 reverse
+        if (validDirs.length === 0) {
+          const revCol = (tileRow === 17) ? ((tileCol - this.dirX + COLS) % COLS) : (tileCol - this.dirX);
+          const revRow = tileRow - this.dirY;
+          if (canWalk(revCol, revRow, isReturning)) {
+            validDirs.push({ x: -this.dirX, y: -this.dirY });
+          }
         }
 
-        this.dirX = bestDir.x;
-        this.dirY = bestDir.y;
+        if (validDirs.length > 0) {
+          if (this.state === 'FRIGHTENED' && !this.ignoresImmunity) {
+            // Chaotic frightened wandering
+            const chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+            this.dirX = chosen.x;
+            this.dirY = chosen.y;
+          } else {
+            let targetX = player.x;
+            let targetY = player.y;
+
+            if (this.state === 'RETURNING') {
+              targetX = 13.5 * TILE_SIZE;
+              targetY = 15.0 * TILE_SIZE;
+            } else {
+              const fDirX = player.dirX || player.lastDirX || 1;
+              const fDirY = player.dirY || player.lastDirY || 0;
+
+              if (this.name === "Jeffrey") {
+                targetX = player.x;
+                targetY = player.y;
+              } else if (this.name === "Mohammed") {
+                targetX = player.x + fDirX * 4 * TILE_SIZE;
+                targetY = player.y + fDirY * 4 * TILE_SIZE;
+              } else if (this.name === "Charlie") {
+                const midX = player.x + fDirX * 2 * TILE_SIZE;
+                const midY = player.y + fDirY * 2 * TILE_SIZE;
+                const jeff = ghosts.find(g => g.name === "Jeffrey") || { x: player.x, y: player.y };
+                targetX = 2 * midX - jeff.x;
+                targetY = 2 * midY - jeff.y;
+              } else if (this.name === "Jose") {
+                const d = Math.hypot(this.x - player.x, this.y - player.y);
+                if (d > 8 * TILE_SIZE) {
+                  targetX = player.x;
+                  targetY = player.y;
+                } else {
+                  targetX = 1.5 * TILE_SIZE;
+                  targetY = 31.5 * TILE_SIZE;
+                }
+              } else if (this.name === "Cholesterol") {
+                const centralWaypoints = [
+                  { x: 6.5 * TILE_SIZE, y: 14.5 * TILE_SIZE },
+                  { x: 21.5 * TILE_SIZE, y: 14.5 * TILE_SIZE },
+                  { x: 21.5 * TILE_SIZE, y: 20.5 * TILE_SIZE },
+                  { x: 6.5 * TILE_SIZE, y: 20.5 * TILE_SIZE }
+                ];
+                const curWp = centralWaypoints[this.waypointIdx];
+                if (Math.hypot(this.x - curWp.x, this.y - curWp.y) < TILE_SIZE * 1.5) {
+                  this.waypointIdx = (this.waypointIdx + 1) % centralWaypoints.length;
+                }
+                targetX = centralWaypoints[this.waypointIdx].x;
+                targetY = centralWaypoints[this.waypointIdx].y;
+              }
+            }
+
+            let bestDir = validDirs[0];
+            let bestDist = Infinity;
+            for (const d of validDirs) {
+              const nextX = (tileCol + d.x) * TILE_SIZE + TILE_SIZE / 2;
+              const nextY = (tileRow + d.y) * TILE_SIZE + TILE_SIZE / 2;
+              const dist = Math.hypot(nextX - targetX, nextY - targetY);
+              if (dist < bestDist) {
+                bestDist = dist;
+                bestDir = d;
+              }
+            }
+            this.dirX = bestDir.x;
+            this.dirY = bestDir.y;
+          }
+        }
       }
 
       this.x += this.dirX * this.speed;
       this.y += this.dirY * this.speed;
+
+      // Safety check: if moving into wall, re-center and unlock
+      const checkCol = (tileRow === 17) ? ((tileCol + this.dirX + COLS) % COLS) : (tileCol + this.dirX);
+      const checkRow = tileRow + this.dirY;
+      if ((this.dirX !== 0 || this.dirY !== 0) && !canWalk(checkCol, checkRow, this.state === 'RETURNING')) {
+        const distFromCenter = Math.hypot(this.x - centerX, this.y - centerY);
+        if (distFromCenter < this.speed * 1.2) {
+          this.x = centerX;
+          this.y = centerY;
+          this.lastTurnCol = -1;
+          this.lastTurnRow = -1;
+        }
+      }
 
       // Warp tunnel Row 17 wrapping across screen edges
       if (tileRow === 17) {
@@ -1332,7 +1610,325 @@
 
   const ghosts = ENEMY_DEFS.map(def => new Enemy(def));
 
-  // --- 7. PROCEDURAL SPRITES ---
+  // --- 7. PROCEDURAL SPRITES & TRUMPY BONUS ITEMS ---
+  // Trumpy Bonus Items Roster (Pac-Man Fruit equivalents)
+  function drawTrumpCoin(ctx, x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    const R = 8.5;
+    const grad = ctx.createRadialGradient(-2, -2, 1, 0, 0, R);
+    grad.addColorStop(0, "#fef08a");
+    grad.addColorStop(0.5, "#eab308");
+    grad.addColorStop(1, "#a16207");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ca8a04";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Embossed bold "T"
+    ctx.fillStyle = "#78350f";
+    ctx.font = "bold 9px serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("T", 0.5, 0.5);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("T", 0, 0);
+
+    // Sparkle star
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(-5, -5, 2, 2);
+    ctx.restore();
+  }
+
+  function drawTrumpPhone(ctx, x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    // Gold phone body
+    const grad = ctx.createLinearGradient(-5, -8, 5, 8);
+    grad.addColorStop(0, "#fde047");
+    grad.addColorStop(0.5, "#eab308");
+    grad.addColorStop(1, "#854d0e");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(-5.5, -8.5, 11, 17, 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ca8a04";
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // Antenna stub
+    ctx.fillStyle = "#eab308";
+    ctx.fillRect(2.5, -11, 2, 3);
+
+    // OLED Screen
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(-4, -6.5, 8, 11);
+
+    // Screen icon "T"
+    ctx.fillStyle = "#38bdf8";
+    ctx.font = "bold 6px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("T", 0, -1);
+
+    // Home button
+    ctx.fillStyle = "#fef08a";
+    ctx.beginPath();
+    ctx.arc(0, 6, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGoldSneaker(ctx, x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // High-top golden sneaker upper
+    ctx.fillStyle = "#eab308";
+    ctx.beginPath();
+    ctx.moveTo(-7, -4);
+    ctx.lineTo(-2, -7);
+    ctx.lineTo(2, -7);
+    ctx.lineTo(4, -3);
+    ctx.lineTo(8, 0);
+    ctx.lineTo(8, 4);
+    ctx.lineTo(-7, 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ankle USA flag patch
+    ctx.fillStyle = "#1e3a8a";
+    ctx.fillRect(-5, -5.5, 3, 2.5);
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(-2, -5.5, 3, 2.5);
+
+    // White midsole & red sole tread
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(-7.5, 4, 16, 2.5);
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(-7.5, 6.2, 16, 1.2);
+
+    // Gold laces crosshatch
+    ctx.strokeStyle = "#fde047";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, -5); ctx.lineTo(3, -2);
+    ctx.moveTo(1, -3); ctx.lineTo(4, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawTrumpSteak(ctx, x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // Golden serving platter
+    ctx.fillStyle = "#e2e8f0";
+    ctx.beginPath();
+    ctx.ellipse(0, 3, 10, 4.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#eab308";
+    ctx.lineWidth = 1.0;
+    ctx.stroke();
+
+    // Well-done steak
+    ctx.fillStyle = "#451a03";
+    ctx.beginPath();
+    ctx.ellipse(-2, 2.5, 6, 3.2, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Charred grill marks
+    ctx.strokeStyle = "#170a02";
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(-5, 1); ctx.lineTo(1, 4);
+    ctx.moveTo(-3, 0.5); ctx.lineTo(3, 3.5);
+    ctx.stroke();
+
+    // Heinz Ketchup Bottle
+    ctx.fillStyle = "#dc2626";
+    ctx.fillRect(4.5, -4, 3.5, 6.5);
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillRect(5.2, -6, 2.1, 2);
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(5.0, -2, 2.5, 2.5);
+    ctx.restore();
+  }
+
+  function drawTrumpNFT(ctx, x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // Holographic gradient card frame
+    const now = Date.now();
+    const rot = (now * 0.003) % (Math.PI * 2);
+    const grad = ctx.createLinearGradient(Math.cos(rot) * 6, Math.sin(rot) * 8, -Math.cos(rot) * 6, -Math.sin(rot) * 8);
+    grad.addColorStop(0, "#38bdf8");
+    grad.addColorStop(0.5, "#ec4899");
+    grad.addColorStop(1, "#facc15");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(-6.5, -9, 13, 18, 2);
+    ctx.fill();
+
+    // Dark card interior
+    ctx.fillStyle = "#090d16";
+    ctx.fillRect(-5, -7.5, 10, 15);
+
+    // Superhero silhouette with gold hair & red cape
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath();
+    ctx.moveTo(-3, -3); ctx.lineTo(-4.5, 3); ctx.lineTo(0, 1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Golden pompadour
+    ctx.fillStyle = "#fde047";
+    ctx.beginPath();
+    ctx.arc(0, -3.5, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // "NFT 1/1" text
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "bold 5px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("NFT", 0, 5.5);
+    ctx.restore();
+  }
+
+  function drawTrumpBible(ctx, x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // Dark leather book cover
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.roundRect(-6, -8, 12, 16, 1.5);
+    ctx.fill();
+
+    // Gold gilt page edge
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillRect(4.5, -7, 1.5, 14);
+
+    // Embossed gold cross on cover
+    ctx.fillStyle = "#fde047";
+    ctx.fillRect(-1, -4.5, 2, 7);
+    ctx.fillRect(-3, -2.5, 6, 2);
+
+    // Tricolor ribbon bookmark hanging from bottom
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(-2, 7, 1.2, 3.5);
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(-0.8, 7, 1.2, 3.5);
+    ctx.fillStyle = "#1e3a8a";
+    ctx.fillRect(0.4, 7, 1.2, 3.5);
+    ctx.restore();
+  }
+
+  function drawTrumpWatch(ctx, x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // Gold bracelet links
+    ctx.fillStyle = "#d97706";
+    ctx.fillRect(-3, -10, 6, 20);
+
+    // Octagonal 18k gold case
+    ctx.fillStyle = "#fbbf24";
+    ctx.beginPath();
+    ctx.arc(0, 0, 7.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ca8a04";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Black dial face
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Diamond hour markers
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(-0.5, -4.5, 1, 1);
+    ctx.fillRect(-0.5, 3.5, 1, 1);
+    ctx.fillRect(-4.5, -0.5, 1, 1);
+    ctx.fillRect(3.5, -0.5, 1, 1);
+
+    // Gold watch hands
+    ctx.strokeStyle = "#fbbf24";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.lineTo(1.8, -2.2);
+    ctx.moveTo(0, 0); ctx.lineTo(-2.2, -1);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawClassifiedBox(ctx, x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // Cardboard banker's box body
+    ctx.fillStyle = "#b45309";
+    ctx.fillRect(-8, -4, 16, 11);
+    ctx.fillStyle = "#d97706";
+    ctx.fillRect(-8, -6.5, 16, 3);
+
+    // Documents sticking out under lid
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(-6, -7.5, 4, 3);
+    ctx.fillRect(0, -8, 5, 3.5);
+
+    // Red "TOP SECRET" stamp
+    ctx.fillStyle = "#ef4444";
+    ctx.font = "bold 5px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("SECRET", 0, 1);
+
+    // Oval handle cutout
+    ctx.fillStyle = "#451a03";
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 2.5, 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  const TRUMPY_ITEMS = [
+    { id: 'coin', name: 'TRUMP COIN', points: 100, draw: drawTrumpCoin, round: 1 },
+    { id: 'phone', name: 'GOLD TRUMP PHONE', points: 300, draw: drawTrumpPhone, round: 2 },
+    { id: 'sneaker', name: 'GOLD SNEAKER', points: 500, draw: drawGoldSneaker, round: 3 },
+    { id: 'steak', name: 'TRUMP STEAK', points: 700, draw: drawTrumpSteak, round: 4 },
+    { id: 'nft', name: 'NFT CARD', points: 1000, draw: drawTrumpNFT, round: 5 },
+    { id: 'bible', name: 'TRUMP BIBLE', points: 2000, draw: drawTrumpBible, round: 6 },
+    { id: 'watch', name: 'TOURBILLON WATCH', points: 3000, draw: drawTrumpWatch, round: 7 },
+    { id: 'classified', name: 'CLASSIFIED BOX', points: 5000, draw: drawClassifiedBox, round: 8 }
+  ];
+
+  function drawTrumpyItem(ctx, itemId, x, y, scale = 1) {
+    switch (itemId) {
+      case 'coin': drawTrumpCoin(ctx, x, y, scale); break;
+      case 'phone': drawTrumpPhone(ctx, x, y, scale); break;
+      case 'sneaker': drawGoldSneaker(ctx, x, y, scale); break;
+      case 'steak': drawTrumpSteak(ctx, x, y, scale); break;
+      case 'nft': drawTrumpNFT(ctx, x, y, scale); break;
+      case 'bible': drawTrumpBible(ctx, x, y, scale); break;
+      case 'watch': drawTrumpWatch(ctx, x, y, scale); break;
+      case 'classified': default: drawClassifiedBox(ctx, x, y, scale); break;
+    }
+  }
+
   function drawMiniBurger(ctx, cx, cy) {
     ctx.save();
     ctx.fillStyle = "#d97706";
@@ -1839,10 +2435,11 @@
 
   // --- 8. MAZE & BUNKER WALL DRAWING ---
   function drawMaze() {
-    ctx.fillStyle = "#1e293b";
+    const curBoard = getCurrentBoard();
+    ctx.fillStyle = curBoard.bgColor;
     ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
 
-    ctx.strokeStyle = "rgba(51, 65, 85, 0.4)";
+    ctx.strokeStyle = curBoard.gridColor;
     ctx.lineWidth = 1;
     for (let r = 3; r <= 32; r++) {
       ctx.beginPath();
@@ -1874,10 +2471,10 @@
           const x = c * TILE_SIZE;
           const y = r * TILE_SIZE;
 
-          ctx.fillStyle = "#451a03";
+          ctx.fillStyle = curBoard.wallFillDark;
           ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-          ctx.fillStyle = "#78350f";
+          ctx.fillStyle = curBoard.wallFillLight;
           ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
 
           const topOpen = (r > 0 && maze[r - 1][c] !== 'W');
@@ -1886,7 +2483,7 @@
           const rightOpen = (c < COLS - 1 && maze[r][c + 1] !== 'W');
 
           ctx.lineWidth = 2.0;
-          ctx.strokeStyle = "#fbbf24";
+          ctx.strokeStyle = curBoard.wallStroke;
 
           if (topOpen) {
             ctx.beginPath(); ctx.moveTo(x, y + 1); ctx.lineTo(x + TILE_SIZE, y + 1); ctx.stroke();
@@ -1901,7 +2498,7 @@
             ctx.beginPath(); ctx.moveTo(x + TILE_SIZE - 1, y); ctx.lineTo(x + TILE_SIZE - 1, y + TILE_SIZE); ctx.stroke();
           }
 
-          ctx.strokeStyle = "rgba(254, 240, 138, 0.45)";
+          ctx.strokeStyle = curBoard.wallHighlight;
           ctx.lineWidth = 1.0;
           if (topOpen) ctx.strokeRect(x + 3, y + 3, TILE_SIZE - 6, 1);
           if (botOpen) ctx.strokeRect(x + 3, y + TILE_SIZE - 4, TILE_SIZE - 6, 1);
@@ -1935,17 +2532,17 @@
     ctx.save();
     ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
     ctx.fillRect(lockerX + 8, lockerY + 1.2 * TILE_SIZE, lockerW - 16, 2.2 * TILE_SIZE);
-    ctx.strokeStyle = "#fbbf24";
+    ctx.strokeStyle = curBoard.wallStroke;
     ctx.lineWidth = 1;
     ctx.strokeRect(lockerX + 8, lockerY + 1.2 * TILE_SIZE, lockerW - 16, 2.2 * TILE_SIZE);
 
-    ctx.fillStyle = "#fbbf24";
+    ctx.fillStyle = curBoard.wallStroke;
     ctx.font = "bold 8px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("SUB-BASEMENT", 14 * TILE_SIZE, lockerY + 2.0 * TILE_SIZE);
+    ctx.fillText(curBoard.plaqueTop, 14 * TILE_SIZE, lockerY + 2.0 * TILE_SIZE);
     ctx.fillStyle = "#fef08a";
     ctx.font = "bold 7px sans-serif";
-    ctx.fillText("EVIDENCE LOCKER", 14 * TILE_SIZE, lockerY + 2.8 * TILE_SIZE);
+    ctx.fillText(curBoard.plaqueBot, 14 * TILE_SIZE, lockerY + 2.8 * TILE_SIZE);
     ctx.restore();
 
     // Warp Chevrons
@@ -1958,7 +2555,35 @@
     ctx.fillText("▶▶", LOGICAL_WIDTH - 10, 17.5 * TILE_SIZE);
     ctx.restore();
 
-    // Collectibles
+    // Active Trumpy Bonus Item in Corridor
+    if (bonusItem.active) {
+      const bounce = Math.sin(bonusItem.sparkleTimer * 8) * 2.5;
+      const bx = bonusItem.x;
+      const by = bonusItem.y + bounce;
+
+      ctx.save();
+      const haloAlpha = 0.28 + Math.sin(bonusItem.sparkleTimer * 6) * 0.15;
+      ctx.fillStyle = `rgba(251, 191, 36, ${haloAlpha})`;
+      ctx.beginPath();
+      ctx.arc(bx, by, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      drawTrumpyItem(ctx, bonusItem.id, bx, by, 1.15);
+
+      // Rotating sparkle stars
+      const spAng = bonusItem.sparkleTimer * 3.5;
+      for (let i = 0; i < 3; i++) {
+        const a = spAng + (i * Math.PI * 2) / 3;
+        const dist = 14 + Math.sin(bonusItem.sparkleTimer * 5 + i) * 3;
+        const sx = bx + Math.cos(a) * dist;
+        const sy = by + Math.sin(a) * dist;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(sx - 1, sy - 1, 2, 2);
+      }
+      ctx.restore();
+    }
+
+    // Collectibles (Burgers and Diet Drinks)
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const item = maze[r][c];
@@ -1981,6 +2606,7 @@
     ctx.font = "bold 12px 'Courier New', monospace";
 
     // Top Row HUD
+    const curBoard = getCurrentBoard();
     ctx.textAlign = "left";
     ctx.fillText(`1UP SCORE`, 16, 18);
     ctx.fillStyle = "#ffffff";
@@ -1994,9 +2620,11 @@
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#fbbf24";
-    ctx.fillText(`ROUND`, LOGICAL_WIDTH - 16, 18);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(`${round}`, LOGICAL_WIDTH - 16, 34);
+    ctx.fillText(`ROUND ${round}`, LOGICAL_WIDTH - 16, 18);
+    ctx.fillStyle = curBoard.wallStroke;
+    ctx.font = "bold 9px sans-serif";
+    ctx.fillText(curBoard.name, LOGICAL_WIDTH - 16, 33);
+    ctx.font = "bold 12px 'Courier New', monospace";
 
     // Executive Immunity Banner
     if (immunityTime > 0 && gameState === 'PLAYING') {
@@ -2007,7 +2635,7 @@
       ctx.fillText(`★ EXECUTIVE IMMUNITY: ${immunityTime.toFixed(1)}s ★`, LOGICAL_WIDTH / 2, 52);
     }
 
-    // Bottom Row: Lives (Mini Pac-Don in Diaper) & Burgers
+    // Bottom Row: Lives (Mini Pac-Don in Diaper), Burgers, and Trumpy Fruit Tracker
     const botY = 34.5 * TILE_SIZE;
     ctx.textAlign = "left";
     ctx.fillStyle = "#94a3b8";
@@ -2015,12 +2643,23 @@
     ctx.fillText("LIVES:", 16, botY);
 
     for (let i = 0; i < lives; i++) {
-      drawMiniPacDonLife(ctx, 72 + i * 22, botY - 3);
+      drawMiniPacDonLife(ctx, 66 + i * 20, botY - 3);
     }
 
-    ctx.textAlign = "right";
+    ctx.textAlign = "center";
     ctx.fillStyle = "#fbbf24";
-    ctx.fillText(`BURGERS: ${pelletsRemaining}`, LOGICAL_WIDTH - 16, botY);
+    ctx.font = "bold 11px monospace";
+    ctx.fillText(`BURGERS: ${pelletsRemaining}`, LOGICAL_WIDTH / 2 - 20, botY);
+
+    // Trumpy Bonus Items Trophy Bar (Bottom Right)
+    const trophyItems = collectedBonusItems.length > 0
+      ? collectedBonusItems.slice(-7)
+      : [TRUMPY_ITEMS[Math.min(round - 1, TRUMPY_ITEMS.length - 1)].id];
+    for (let i = 0; i < trophyItems.length; i++) {
+      const itId = trophyItems[trophyItems.length - 1 - i];
+      const tx = (LOGICAL_WIDTH - 20) - i * 22;
+      drawTrumpyItem(ctx, itId, tx, botY - 3, 0.78);
+    }
 
     // Floating Popup Scores
     for (let i = popupScores.length - 1; i >= 0; i--) {
@@ -2028,7 +2667,7 @@
       p.y -= 0.5;
       p.alpha -= 0.015;
       ctx.fillStyle = `rgba(253, 224, 71, ${p.alpha})`;
-      ctx.font = "bold 13px sans-serif";
+      ctx.font = "bold 12px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(`+${p.text}`, p.x, p.y);
       if (p.alpha <= 0) popupScores.splice(i, 1);
@@ -2069,24 +2708,29 @@
       ctx.fillStyle = `rgba(251, 191, 36, ${flashAlpha})`;
       ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
 
-      ctx.fillStyle = "rgba(11, 15, 25, 0.88)";
-      ctx.fillRect(50, 270, LOGICAL_WIDTH - 100, 160);
+      ctx.fillStyle = "rgba(11, 15, 25, 0.90)";
+      ctx.fillRect(50, 260, LOGICAL_WIDTH - 100, 180);
       ctx.strokeStyle = "#fbbf24";
       ctx.lineWidth = 2.5;
-      ctx.strokeRect(50, 270, LOGICAL_WIDTH - 100, 160);
+      ctx.strokeRect(50, 260, LOGICAL_WIDTH - 100, 180);
 
+      const nextBoard = BOARDS[round % BOARDS.length];
       ctx.fillStyle = "#fbbf24";
       ctx.font = "bold 24px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("EVIDENCE DESTROYED!", LOGICAL_WIDTH / 2, 320);
+      ctx.fillText("EVIDENCE DESTROYED!", LOGICAL_WIDTH / 2, 305);
 
       ctx.fillStyle = "#fde047";
       ctx.font = "bold 13px monospace";
-      ctx.fillText("ENEMY SPEEDS ACCELERATING +5%", LOGICAL_WIDTH / 2, 355);
+      ctx.fillText("ENEMY SPEEDS ACCELERATING +5%", LOGICAL_WIDTH / 2, 335);
 
       ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 12px monospace";
-      ctx.fillText(`PREPARING ROUND ${round + 1}...`, LOGICAL_WIDTH / 2, 395);
+      ctx.font = "bold 14px monospace";
+      ctx.fillText(`NEXT BOARD: ${nextBoard.name}`, LOGICAL_WIDTH / 2, 375);
+
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "11px monospace";
+      ctx.fillText(nextBoard.subName, LOGICAL_WIDTH / 2, 400);
     }
 
     ctx.restore();
@@ -2127,14 +2771,18 @@
     if (gameState === 'LEVEL_CLEAR') {
       levelClearTimer -= dt;
       if (levelClearTimer <= 0) {
-        // Advance round with +5% enemy speed
+        // Advance round with +5% enemy speed and switch to next board
         round++;
         enemyGlobalSpeedMult *= 1.05;
-        maze = buildGrid();
+        const curBoard = getCurrentBoard();
+        maze = buildGrid(curBoard);
         totalPellets = countPellets(maze);
         pelletsRemaining = totalPellets;
         immunityTime = 0;
         popupScores = [];
+        bonusItem.active = false;
+        bonusItem.spawn1Triggered = false;
+        bonusItem.spawn2Triggered = false;
         player.reset();
         ghosts.forEach(g => g.reset());
         gameState = 'PLAYING';
@@ -2183,8 +2831,41 @@
       if (immunityTime <= 0) {
         immunityTime = 0;
         ghosts.forEach(g => {
-          if (!g.ignoresImmunity && g.state === 'FRIGHTENED') g.state = 'CHASE';
+          if (!g.ignoresImmunity && g.state === 'FRIGHTENED') {
+            g.state = 'CHASE';
+            g.lastTurnCol = -1;
+            g.lastTurnRow = -1;
+          }
         });
+      }
+    }
+
+    // Bonus Item spawning (at 70 and 170 pellets eaten)
+    const pelletsEaten = totalPellets - pelletsRemaining;
+    if (pelletsEaten >= 70 && !bonusItem.spawn1Triggered) {
+      bonusItem.spawn1Triggered = true;
+      spawnBonusItem();
+    } else if (pelletsEaten >= 170 && !bonusItem.spawn2Triggered) {
+      bonusItem.spawn2Triggered = true;
+      spawnBonusItem();
+    }
+
+    // Bonus Item timer & player pickup
+    if (bonusItem.active) {
+      bonusItem.timer += dt;
+      bonusItem.sparkleTimer += dt;
+      if (bonusItem.timer >= bonusItem.maxTimer) {
+        bonusItem.active = false;
+      } else {
+        const bDist = Math.hypot(player.x - bonusItem.x, player.y - bonusItem.y);
+        if (bDist < TILE_SIZE * 0.95) {
+          score += bonusItem.points;
+          popupScores.push({ text: `${bonusItem.points} ${bonusItem.name}`, x: bonusItem.x, y: bonusItem.y - 12, alpha: 1.0 });
+          audio.playBonusItemChime();
+          collectedBonusItems.push(bonusItem.id);
+          bonusItem.active = false;
+          updateHighScore();
+        }
       }
     }
 
@@ -2214,7 +2895,7 @@
     // Win condition check -> LEVEL CLEAR
     if (pelletsRemaining <= 0 && gameState === 'PLAYING') {
       gameState = 'LEVEL_CLEAR';
-      levelClearTimer = 2.0;
+      levelClearTimer = 2.4;
       audio.playBrassFanfare();
     }
   }
@@ -2225,7 +2906,12 @@
     score = 0;
     lives = 3;
     enemyGlobalSpeedMult = 1.0;
-    maze = buildGrid();
+    collectedBonusItems = [];
+    bonusItem.active = false;
+    bonusItem.spawn1Triggered = false;
+    bonusItem.spawn2Triggered = false;
+    const curBoard = getCurrentBoard();
+    maze = buildGrid(curBoard);
     totalPellets = countPellets(maze);
     pelletsRemaining = totalPellets;
     immunityTime = 0;

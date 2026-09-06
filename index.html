@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SnakManr - The Resistance Arcade Cabinet 3</title>
+  <title>⚡ THE RESISTANCE ARCADE // CABINET 3: BUNKER MUNCHER</title>
   <style>
     * {
       box-sizing: border-box;
@@ -15,61 +15,58 @@
     html, body {
       width: 100%;
       height: 100%;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       background-color: #0b0f19;
       color: #f1f5f9;
       font-family: 'Courier New', Courier, monospace, system-ui, sans-serif;
       overscroll-behavior: none;
-      touch-action: none;
+      touch-action: pan-y;
       user-select: none;
       -webkit-user-select: none;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
+      padding: 4px 0 20px 0;
     }
 
-    /* Cabinet Bezel & Container */
+    /* Cabinet Bezel & Frame */
     #cabinet {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      max-width: 100vw;
-      max-height: 100vh;
-      padding: 6px;
+      width: 100%;
+      max-width: 564px;
       position: relative;
+      padding: 0 4px;
     }
 
     #marquee {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
       width: 100%;
-      max-width: 560px;
-      padding: 4px 12px;
+      padding: 8px 12px;
       background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
       border: 2px solid #fbbf24;
       border-bottom: none;
       border-radius: 8px 8px 0 0;
-      box-shadow: 0 -2px 10px rgba(251, 191, 36, 0.2);
+      box-shadow: 0 -2px 14px rgba(251, 191, 36, 0.25);
+      text-align: center;
     }
 
     .cabinet-title {
       font-weight: 900;
-      font-size: 15px;
-      letter-spacing: 2px;
+      font-size: 13px;
+      letter-spacing: 1.5px;
       color: #fbbf24;
-      text-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+      text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
-    }
-
-    .cabinet-sub {
-      font-size: 10px;
-      color: #94a3b8;
-      letter-spacing: 1px;
       text-transform: uppercase;
     }
 
@@ -81,17 +78,209 @@
       background: #0b0f19;
       line-height: 0;
       border-radius: 0 0 4px 4px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     canvas {
       display: block;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
-      max-width: 96vw;
-      max-height: calc(92vh - 110px);
-      width: auto;
+      max-width: 100%;
       height: auto;
       aspect-ratio: 28 / 36;
+      touch-action: none;
+    }
+
+    /* Interactive Overlays inside Canvas Wrapper */
+    .game-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11, 15, 25, 0.92);
+      padding: 16px;
+      text-align: center;
+      z-index: 40;
+      transition: opacity 0.2s ease;
+      line-height: 1.4;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Game Over Modal Styling */
+    .modal-card {
+      background: #1e293b;
+      border: 2px solid #fbbf24;
+      border-radius: 8px;
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.35);
+      padding: 16px 20px;
+      width: 94%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: #ef4444;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    .death-quote {
+      font-style: italic;
+      color: #fef08a;
+      font-size: 13px;
+      border-left: 3px solid #fbbf24;
+      padding-left: 8px;
+      margin: 4px 0;
+      text-align: left;
+    }
+
+    .score-readout-row {
+      display: flex;
+      justify-content: space-around;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      padding: 6px;
+    }
+
+    .score-readout-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .score-label {
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .score-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fbbf24;
+    }
+
+    .score-val.hi {
+      color: #fde047;
+    }
+
+    /* Mutual Aid Card inside Modal */
+    .aid-box {
+      background: #0f172a;
+      border: 1px solid #fbbf24;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }
+
+    .aid-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .aid-badge {
+      font-size: 9px;
+      background: #fbbf24;
+      color: #0b0f19;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 3px;
+      letter-spacing: 1px;
+    }
+
+    .aid-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: 0.5px;
+    }
+
+    .aid-copy {
+      font-size: 11px;
+      color: #cbd5e1;
+      line-height: 1.35;
+    }
+
+    .aid-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .aid-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .aid-btn-primary {
+      background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+      color: #0b0f19;
+      border: none;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+    }
+    .aid-btn-primary:hover {
+      background: #fde047;
+      box-shadow: 0 0 14px rgba(253, 224, 71, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .aid-btn-secondary {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #475569;
+    }
+    .aid-btn-secondary:hover {
+      color: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .restart-btn {
+      background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+      color: #ffffff;
+      border: 1px solid #86efac;
+      border-radius: 4px;
+      padding: 9px;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+      margin-top: 4px;
+    }
+    .restart-btn:hover {
+      background: #4ade80;
     }
 
     /* Touch Controls Overlay */
@@ -101,7 +290,7 @@
       max-width: 560px;
       margin-top: 6px;
       grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: 42px 42px;
+      grid-template-rows: 40px 40px;
       gap: 6px;
       padding: 2px;
     }
@@ -117,7 +306,7 @@
       border: 1px solid #fbbf24;
       color: #fbbf24;
       border-radius: 6px;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: bold;
       display: flex;
       align-items: center;
@@ -136,60 +325,122 @@
     #t-down { grid-column: 2; grid-row: 2; }
     #t-right { grid-column: 3; grid-row: 2; }
 
-    /* Audio Banner Prompt */
-    #audio-prompt {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(15, 23, 42, 0.95);
+    /* Mutual Aid Bottom Drawer */
+    #mutual-aid-banner {
+      width: 100%;
+      max-width: 560px;
+      margin-top: 8px;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
       border: 2px solid #fbbf24;
-      padding: 16px 24px;
-      border-radius: 8px;
+      border-radius: 6px;
+      padding: 10px 14px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Cabinet Footer Tag */
+    #cabinet-footer {
+      margin-top: 10px;
+      font-size: 10px;
+      color: #64748b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
       text-align: center;
-      box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
-      z-index: 50;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-
-    #audio-prompt h2 {
-      color: #fbbf24;
-      font-size: 18px;
-      margin-bottom: 6px;
-      letter-spacing: 2px;
-    }
-
-    #audio-prompt p {
-      font-size: 12px;
-      color: #cbd5e1;
     }
   </style>
 </head>
 <body>
 
   <div id="cabinet">
+    <!-- Top Marquee Standard -->
     <div id="marquee">
       <div class="cabinet-title">
-        <span>★</span> SNAKMANR <span>★</span>
+        <span>⚡</span> THE RESISTANCE ARCADE // CABINET 3: BUNKER MUNCHER
       </div>
-      <div class="cabinet-sub">The Resistance Arcade 3</div>
     </div>
 
+    <!-- Main Canvas Viewport -->
     <div id="canvas-wrapper">
       <canvas id="gameCanvas"></canvas>
-      <div id="audio-prompt">
-        <h2>★ CLICK OR SWIPE TO PLAY ★</h2>
-        <p>ARROWS / WASD • AUDIO ENGINE ARMED</p>
+
+      <!-- Game Over Modal Overlay -->
+      <div id="gameover-overlay" class="game-overlay hidden">
+        <div class="modal-card">
+          <div class="modal-title">SUBPOENA SERVED</div>
+          <div id="death-quote-text" class="death-quote">
+            "The evidence locker was unsealed."
+          </div>
+
+          <div class="score-readout-row">
+            <div class="score-readout-item">
+              <span class="score-label">Final Score</span>
+              <span id="final-score-val" class="score-val">000000</span>
+            </div>
+            <div class="score-readout-item">
+              <span class="score-label">All-Time Best</span>
+              <span id="high-score-val" class="score-val hi">000000</span>
+            </div>
+          </div>
+
+          <!-- Mutual Aid Tip Jar in Game Over CTA -->
+          <div class="aid-box">
+            <div class="aid-header">
+              <span class="aid-badge">MUTUAL AID</span>
+              <span class="aid-title">Escape the Bunker // Feed Our Neighbors</span>
+            </div>
+            <p class="aid-copy">
+              Built by a Western PA educator. 50% of net tips support the Westmoreland County Food Bank and Greater Pittsburgh Community Food Bank to feed local families.
+            </p>
+            <div class="aid-actions">
+              <a href="https://buy.stripe.com/your_link" target="_blank" rel="noopener noreferrer" class="aid-btn aid-btn-primary">
+                ★ Tip $3 / Feed Local Families
+              </a>
+              <a href="/transparency.html" class="aid-btn aid-btn-secondary">
+                Inspect Public Ledger
+              </a>
+            </div>
+          </div>
+
+          <button id="restart-btn" class="restart-btn">
+            TAP OR PRESS SPACE TO ESCAPE AGAIN
+          </button>
+        </div>
       </div>
     </div>
 
+    <!-- On-screen Virtual D-Pad for Touch/Mobile -->
     <div id="touch-bar">
       <button class="t-btn" id="t-up">▲</button>
       <button class="t-btn" id="t-left">◀</button>
       <button class="t-btn" id="t-down">▼</button>
       <button class="t-btn" id="t-right">▶</button>
     </div>
+
+    <!-- Mutual Aid Bottom Drawer Standard -->
+    <div id="mutual-aid-banner">
+      <div class="aid-header">
+        <span class="aid-badge">THE RESISTANCE ARCADE</span>
+        <span class="aid-title">Escape the Bunker // Feed Our Neighbors</span>
+      </div>
+      <p class="aid-copy">
+        Built by a Western PA educator. 50% of net tips support the Westmoreland County Food Bank and Greater Pittsburgh Community Food Bank to feed local families.
+      </p>
+      <div class="aid-actions" style="flex-direction: row; flex-wrap: wrap;">
+        <a href="https://buy.stripe.com/your_link" target="_blank" rel="noopener noreferrer" class="aid-btn aid-btn-primary" style="flex: 1; min-width: 190px;">
+          ★ Tip $3 / Feed Local Families
+        </a>
+        <a href="/transparency.html" class="aid-btn aid-btn-secondary" style="flex: 1; min-width: 150px;">
+          Inspect Public Ledger
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer Tag Standard -->
+    <footer id="cabinet-footer">
+      Made In USAI • Zero Corporate Paywalls • Mutual Aid Gaming
+    </footer>
   </div>
 
 <script>
@@ -205,7 +456,20 @@
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-  const audioPrompt = document.getElementById('audio-prompt');
+  const gameOverOverlay = document.getElementById('gameover-overlay');
+  const deathQuoteText = document.getElementById('death-quote-text');
+  const finalScoreVal = document.getElementById('final-score-val');
+  const highScoreVal = document.getElementById('high-score-val');
+  const restartBtn = document.getElementById('restart-btn');
+
+  // Themed Satirical Death Quotes
+  const DEATH_QUOTES = [
+    "The evidence locker was unsealed.",
+    "Subpoena intercepted on corridor 4.",
+    "Blocked by high cholesterol.",
+    "Rigged maze! Stop the count!",
+    "Secret exit to Mar-a-Lago was barricaded."
+  ];
 
   // High-DPI Canvas Scaling
   function resizeCanvas() {
@@ -220,7 +484,7 @@
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  // --- 2. WEB AUDIO API SYNTHESIZER ---
+  // --- 2. WEB AUDIO SYNTHESIZER ---
   class SoundEngine {
     constructor() {
       this.ctx = null;
@@ -241,12 +505,8 @@
           }
           this.startBunkerHum();
           this.initialized = true;
-          if (audioPrompt) audioPrompt.style.opacity = '0';
-          setTimeout(() => { if (audioPrompt) audioPrompt.style.display = 'none'; }, 300);
         }
-      } catch (e) {
-        console.warn('Web Audio error:', e);
-      }
+      } catch (e) {}
     }
 
     resume() {
@@ -258,7 +518,6 @@
     startBunkerHum() {
       if (!this.ctx) return;
       try {
-        // Subtle procedural low background oscillator (~55Hz sawtooth with lowpass filter)
         this.bunkerOsc = this.ctx.createOscillator();
         const filter = this.ctx.createBiquadFilter();
         this.bunkerGain = this.ctx.createGain();
@@ -271,7 +530,6 @@
 
         this.bunkerGain.gain.setValueAtTime(0.025, this.ctx.currentTime);
 
-        // Gentle breathing LFO modulation
         const lfo = this.ctx.createOscillator();
         const lfoGain = this.ctx.createGain();
         lfo.frequency.setValueAtTime(0.3, this.ctx.currentTime);
@@ -294,7 +552,6 @@
         const gain = this.ctx.createGain();
         const filter = this.ctx.createBiquadFilter();
 
-        // Rapid wet biting synth burst (~140Hz square wave with steep pitch drop)
         this.chompAlt = !this.chompAlt;
         const startPitch = this.chompAlt ? 155 : 135;
         const endPitch = this.chompAlt ? 70 : 55;
@@ -327,7 +584,6 @@
         const gain = this.ctx.createGain();
         const filter = this.ctx.createBiquadFilter();
 
-        // Sweeping high-frequency tone (~400Hz to 1200Hz)
         osc.type = 'sine';
         osc.frequency.setValueAtTime(400, now);
         osc.frequency.exponentialRampToValueAtTime(1200, now + 0.35);
@@ -348,7 +604,6 @@
         osc.start(now);
         osc.stop(now + 0.4);
 
-        // Straw bubble flutter
         const bubble = this.ctx.createOscillator();
         const bGain = this.ctx.createGain();
         bubble.type = 'triangle';
@@ -364,7 +619,6 @@
       } catch (e) {}
     }
 
-    // Triumphant brass fanfare sweep during Executive Immunity
     playBrassFanfare() {
       if (!this.ctx) return;
       try {
@@ -405,13 +659,11 @@
       } catch (e) {}
     }
 
-    // Arcade crunch chime upon eating a frightened enemy
     playEnemyCrunchChime() {
       if (!this.ctx) return;
       try {
         const now = this.ctx.currentTime;
 
-        // 1. Arcade crunch impact transient
         const crunchOsc = this.ctx.createOscillator();
         const crunchGain = this.ctx.createGain();
         const crunchFilter = this.ctx.createBiquadFilter();
@@ -433,7 +685,6 @@
         crunchOsc.start(now);
         crunchOsc.stop(now + 0.075);
 
-        // 2. High arcade victory chime bell (880Hz -> 1760Hz)
         const chimeFreqs = [880, 1320, 1760];
         chimeFreqs.forEach((freq, idx) => {
           const osc = this.ctx.createOscillator();
@@ -482,7 +733,7 @@
     "WO....WW.....W", // 4  Top-Left Corner Drink 'O'
     "W.WWWW.WW.WWWW", // 5
     "W.WWWW.WW.WWWW", // 6
-    "W.............", // 7  Continuous cross corridor
+    "W.............", // 7
     "W.WWWW.WW.WWWW", // 8
     "W.WWWW.WW.WWWW", // 9
     "W......WW.....", // 10
@@ -497,7 +748,7 @@
     "     W.WW WWWW", // 19 Locker bottom wall
     "     W.WW     ", // 20 Corridor below locker
     "WWWWWW.WW WWWW", // 21
-    "W.............", // 22 Continuous cross corridor
+    "W.............", // 22
     "W.WWWW.WWWWWW.", // 23
     "W.WWWW.WWWWWW.", // 24
     "WO..WW........", // 25 Bottom-Left Corner Drink 'O'
@@ -561,16 +812,21 @@
     }
   })();
 
-  // --- 4. GAME STATE ---
-  let score = 0;
-  let highScore = parseInt(localStorage.getItem('snakmanr_hi') || '0', 10);
-  let lives = 3;
-  let gameOver = false;
-  let victory = false;
-  let round = 1;
-  let gameStarted = false;
+  // --- 4. GAME STATES & PERSISTENCE ---
+  // Game States: 'START', 'PLAYING', 'LEVEL_CLEAR', 'GAMEOVER'
+  let gameState = 'START';
 
-  // Executive Immunity (Power Pellet effect)
+  let score = 0;
+  // High score key specified: bunker_muncher_high
+  let highScore = parseInt(localStorage.getItem('bunker_muncher_high') || localStorage.getItem('snakmanr_hi') || '0', 10);
+  let lives = 3;
+  let round = 1;
+  let enemyGlobalSpeedMult = 1.0;
+
+  // Level Clear Timer
+  let levelClearTimer = 0;
+
+  // Executive Immunity
   let immunityTime = 0;
   let ghostStreakScore = 200;
   let popupScores = [];
@@ -633,6 +889,26 @@
     audio.playDeath();
   }
 
+  function showGameOverModal() {
+    gameState = 'GAMEOVER';
+    const randomQuote = DEATH_QUOTES[Math.floor(Math.random() * DEATH_QUOTES.length)];
+    deathQuoteText.textContent = `"${randomQuote}"`;
+    finalScoreVal.textContent = score.toString().padStart(6, '0');
+    highScoreVal.textContent = highScore.toString().padStart(6, '0');
+    gameOverOverlay.classList.remove('hidden');
+  }
+
+  function hideGameOverModal() {
+    gameOverOverlay.classList.add('hidden');
+  }
+
+  function updateHighScore() {
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem('bunker_muncher_high', highScore.toString());
+    }
+  }
+
   // --- 5. PAC-DON (PLAYER) CONTROLLER ---
   const player = {
     x: 13.5 * TILE_SIZE,
@@ -662,17 +938,16 @@
     },
 
     update(dt) {
-      if (deathAnim.active) return;
+      if (deathAnim.active || gameState !== 'PLAYING') return;
 
       this.speed = (immunityTime > 0) ? this.baseSpeed * 1.15 : this.baseSpeed;
 
-      // Keep track of facing vector for Mohammed & Charlie AI
       if (this.dirX !== 0 || this.dirY !== 0) {
         this.lastDirX = this.dirX;
         this.lastDirY = this.dirY;
       }
 
-      // Handle Immediate Direction Reversal
+      // Reversals
       if (this.nextDirX !== 0 && this.nextDirX === -this.dirX) {
         this.dirX = this.nextDirX;
         this.dirY = 0;
@@ -681,7 +956,7 @@
         this.dirX = 0;
       }
 
-      // Pre-turn Directional Buffering at Tile Centers
+      // Pre-turn Directional Buffering
       const tileCol = Math.floor(this.x / TILE_SIZE);
       const tileRow = Math.floor(this.y / TILE_SIZE);
       const centerX = tileCol * TILE_SIZE + TILE_SIZE / 2;
@@ -706,7 +981,7 @@
         }
       }
 
-      // Check wall collision ahead
+      // Wall collision check ahead
       if (this.dirX !== 0 || this.dirY !== 0) {
         const nextCol = tileCol + this.dirX;
         const nextRow = tileRow + this.dirY;
@@ -725,17 +1000,15 @@
         }
       }
 
-      // Move player
       this.x += this.dirX * this.speed;
       this.y += this.dirY * this.speed;
 
-      // Update rotation angle
       if (this.dirX > 0) this.angle = 0;
       else if (this.dirX < 0) this.angle = Math.PI;
       else if (this.dirY > 0) this.angle = Math.PI / 2;
       else if (this.dirY < 0) this.angle = -Math.PI / 2;
 
-      // Animate chomping mouth
+      // Animate mouth
       if (this.dirX !== 0 || this.dirY !== 0) {
         if (this.mouthOpening) {
           this.mouthAngle += 0.09;
@@ -752,7 +1025,7 @@
         }
       }
 
-      // Row 17 Warp Tunnel wrapping
+      // Warp tunnel Row 17
       if (tileRow === 17) {
         if (this.x < -TILE_SIZE / 2) {
           this.x = LOGICAL_WIDTH + TILE_SIZE / 2 - 2;
@@ -761,7 +1034,7 @@
         }
       }
 
-      // Collectible detection
+      // Collectibles eating
       const curCol = Math.round((this.x - TILE_SIZE / 2) / TILE_SIZE);
       const curRow = Math.round((this.y - TILE_SIZE / 2) / TILE_SIZE);
       if (curRow >= 0 && curRow < ROWS && curCol >= 0 && curCol < COLS) {
@@ -771,17 +1044,14 @@
           score += 10;
           pelletsRemaining--;
           audio.playChomp();
-          if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('snakmanr_hi', highScore.toString());
-          }
+          updateHighScore();
         } else if (item === 'O') {
           maze[curRow][curCol] = ' ';
           score += 50;
           pelletsRemaining--;
           audio.playDrinkSlurp();
-          audio.playBrassFanfare(); // Triumphant brass fanfare sweep!
-          immunityTime = 8.0; // 8 seconds of Executive Immunity
+          audio.playBrassFanfare();
+          immunityTime = 8.0;
           ghostStreakScore = 200;
           ghosts.forEach(g => {
             if (!g.ignoresImmunity && g.state === 'CHASE') {
@@ -790,10 +1060,7 @@
               g.dirY = -g.dirY;
             }
           });
-          if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('snakmanr_hi', highScore.toString());
-          }
+          updateHighScore();
         }
       }
     }
@@ -852,8 +1119,8 @@
       releaseTime: 1.0,
       homeCol: 15,
       homeRow: 17,
-      ignoresImmunity: true, // The Hallway Blocker: IGNORES IMMUNITY, NEVER FLEES
-      speedMult: 0.70        // Moves at 70% speed
+      ignoresImmunity: true,
+      speedMult: 0.70
     }
   ];
 
@@ -877,15 +1144,14 @@
       this.dirY = -1;
       this.state = 'IN_LOCKER';
       this.timer = 0;
-      this.speed = 1.95 * this.speedMult;
+      this.speed = 1.95 * this.speedMult * enemyGlobalSpeedMult;
       this.waypointIdx = 0;
     }
 
     update(dt) {
-      if (deathAnim.active) return;
+      if (deathAnim.active || gameState !== 'PLAYING') return;
       this.timer += dt;
 
-      // In Locker bouncing
       if (this.state === 'IN_LOCKER') {
         const topY = 16.5 * TILE_SIZE;
         const botY = 17.5 * TILE_SIZE;
@@ -899,7 +1165,6 @@
         return;
       }
 
-      // Leaving Locker
       if (this.state === 'LEAVING_LOCKER') {
         const targetX = 13.5 * TILE_SIZE;
         const targetY = 14.5 * TILE_SIZE;
@@ -918,17 +1183,15 @@
         return;
       }
 
-      // Base Speed calculation
-      const baseRoundSpeed = 1.95 + (round - 1) * 0.15;
+      const baseRoundSpeed = (1.95 + (round - 1) * 0.1) * enemyGlobalSpeedMult;
       if (this.state === 'RETURNING') {
-        this.speed = 3.6; // Eyes sprinting back
+        this.speed = 3.6;
       } else if (this.state === 'FRIGHTENED' && !this.ignoresImmunity) {
-        this.speed = 1.25; // Frightened slow crawl
+        this.speed = 1.25;
       } else {
         this.speed = baseRoundSpeed * this.speedMult;
       }
 
-      // Intersection Navigation & Target Calculation
       const tileCol = Math.floor(this.x / TILE_SIZE);
       const tileRow = Math.floor(this.y / TILE_SIZE);
       const centerX = tileCol * TILE_SIZE + TILE_SIZE / 2;
@@ -939,7 +1202,6 @@
         this.x = centerX;
         this.y = centerY;
 
-        // Revived in locker
         if (this.state === 'RETURNING') {
           if (tileRow === 15 && (tileCol === 13 || tileCol === 14)) {
             this.state = 'IN_LOCKER';
@@ -958,41 +1220,34 @@
           targetX = 13.5 * TILE_SIZE;
           targetY = 15 * TILE_SIZE;
         } else if (this.state === 'FRIGHTENED' && !this.ignoresImmunity) {
-          // Flee away from Pac-Don
           targetX = (this.x > player.x) ? LOGICAL_WIDTH : 0;
           targetY = (this.y > player.y) ? LOGICAL_HEIGHT : 0;
         } else {
-          // --- 5 AI BEHAVIOR ENGINES ---
           const fDirX = player.dirX || player.lastDirX || 1;
           const fDirY = player.dirY || player.lastDirY || 0;
 
           if (this.name === "Jeffrey") {
-            // Blinky: Direct tile stalker targeting Pac-Don's exact coordinates
             targetX = player.x;
             targetY = player.y;
           } else if (this.name === "Mohammed") {
-            // Pinky: Ambush flanker targeting 4 tiles ahead of Pac-Don's vector
             targetX = player.x + fDirX * 4 * TILE_SIZE;
             targetY = player.y + fDirY * 4 * TILE_SIZE;
           } else if (this.name === "Charlie") {
-            // Inky: Vector pincer calculating intercept paths between Jeffrey and Pac-Don
             const midX = player.x + fDirX * 2 * TILE_SIZE;
             const midY = player.y + fDirY * 2 * TILE_SIZE;
             const jeff = ghosts.find(g => g.name === "Jeffrey") || { x: player.x, y: player.y };
             targetX = 2 * midX - jeff.x;
             targetY = 2 * midY - jeff.y;
           } else if (this.name === "Jose") {
-            // Clyde: Roams aggressively if dist > 8 tiles; retreats to bottom-left corner when closer
             const d = Math.hypot(this.x - player.x, this.y - player.y);
             if (d > 8 * TILE_SIZE) {
               targetX = player.x;
               targetY = player.y;
             } else {
               targetX = 1.5 * TILE_SIZE;
-              targetY = 31.5 * TILE_SIZE; // Bottom-Left Corner Retreat
+              targetY = 31.5 * TILE_SIZE;
             }
           } else if (this.name === "Cholesterol") {
-            // Cholesterol: Central Hallway Blocker (loops central corridor waypoints, ignores immunity)
             const centralWaypoints = [
               { x: 6.5 * TILE_SIZE, y: 14.5 * TILE_SIZE },
               { x: 21.5 * TILE_SIZE, y: 14.5 * TILE_SIZE },
@@ -1008,19 +1263,18 @@
           }
         }
 
-        // Evaluate directional candidate paths
         const dirs = [
-          { x: 0, y: -1 }, // Up
-          { x: -1, y: 0 }, // Left
-          { x: 0, y: 1 },  // Down
-          { x: 1, y: 0 }   // Right
+          { x: 0, y: -1 },
+          { x: -1, y: 0 },
+          { x: 0, y: 1 },
+          { x: 1, y: 0 }
         ];
 
         let bestDir = null;
         let bestDist = Infinity;
 
         for (const d of dirs) {
-          if (d.x === -this.dirX && d.y === -this.dirY) continue; // No 180 reverse
+          if (d.x === -this.dirX && d.y === -this.dirY) continue;
 
           const nCol = tileCol + d.x;
           const nRow = tileRow + d.y;
@@ -1048,7 +1302,6 @@
       this.x += this.dirX * this.speed;
       this.y += this.dirY * this.speed;
 
-      // Row 17 warp tunnel
       if (tileRow === 17) {
         if (this.x < -TILE_SIZE / 2) {
           this.x = LOGICAL_WIDTH + TILE_SIZE / 2 - 2;
@@ -1061,9 +1314,7 @@
 
   const ghosts = ENEMY_DEFS.map(def => new Enemy(def));
 
-  // --- 7. PROCEDURAL SPRITE RENDERING ---
-
-  // Mini-Burger
+  // --- 7. PROCEDURAL SPRITES ---
   function drawMiniBurger(ctx, cx, cy) {
     ctx.save();
     ctx.fillStyle = "#d97706";
@@ -1088,7 +1339,6 @@
     ctx.restore();
   }
 
-  // Diet Drink
   let drinkGlow = 0;
   function drawDietDrink(ctx, cx, cy) {
     ctx.save();
@@ -1100,7 +1350,7 @@
     ctx.arc(cx, cy, 10 + pulse, 0, Math.PI * 2);
     ctx.fill();
 
-    // Red-and-White Striped Straw
+    // Straw
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#ffffff";
     ctx.beginPath();
@@ -1116,7 +1366,7 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Silver Cup Lid
+    // Silver Lid
     ctx.fillStyle = "#94a3b8";
     ctx.fillRect(cx - 5.5, cy - 4.5, 11, 2.5);
 
@@ -1130,7 +1380,6 @@
     ctx.closePath();
     ctx.fill();
 
-    // Diet Logo
     ctx.fillStyle = "#1e3a8a";
     ctx.fillRect(cx - 4, cy - 0.5, 8, 4);
     ctx.fillStyle = "#ffffff";
@@ -1142,12 +1391,10 @@
     ctx.restore();
   }
 
-  // Pac-Don
   function drawPacDon(ctx, x, y, angle, mouthAngle) {
     ctx.save();
     ctx.translate(x, y);
 
-    // Radiant Executive Immunity Aura
     if (immunityTime > 0) {
       ctx.save();
       const auraPulse = Math.sin(Date.now() * 0.015) * 4;
@@ -1175,19 +1422,17 @@
     ctx.closePath();
     ctx.fill();
 
-    // Pale White Raccoon Circles
     ctx.fillStyle = "#fef08a";
     ctx.beginPath();
     ctx.ellipse(3, -5.5, 4.2, 3, 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Squinting Eye Slot
     ctx.fillStyle = "#0f172a";
     ctx.beginPath();
     ctx.ellipse(4, -5.5, 2.2, 1, 0.1, 0, Math.PI * 2);
     ctx.fill();
 
-    // Signature Swooping Golden Pompadour Hair
+    // Golden Pompadour Hair
     ctx.fillStyle = "#fde047";
     ctx.beginPath();
     ctx.moveTo(-10, -2);
@@ -1233,14 +1478,12 @@
     ctx.restore();
   }
 
-  // The 5 Procedural Enemy Sprites
   function drawGhost(ctx, ghost) {
     ctx.save();
     ctx.translate(ghost.x, ghost.y);
 
     const now = Date.now();
 
-    // State: RETURNING (Floating dark sunglasses/eyes speeding to locker)
     if (ghost.state === 'RETURNING') {
       ctx.fillStyle = "#0f172a";
       ctx.fillRect(-6, -3, 5, 4);
@@ -1253,7 +1496,6 @@
       return;
     }
 
-    // State: FRIGHTENED (Translucent blue, white flash, raising legal briefs)
     if (ghost.state === 'FRIGHTENED' && !ghost.ignoresImmunity) {
       const flash = (immunityTime <= 2.0 && Math.sin(now * 0.03) > 0);
       ctx.fillStyle = flash ? "#f8fafc" : "rgba(96, 165, 250, 0.85)";
@@ -1270,7 +1512,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Panicked wavy mouth
       ctx.strokeStyle = flash ? "#ef4444" : "#fef08a";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -1282,7 +1523,7 @@
       ctx.lineTo(5, 0);
       ctx.stroke();
 
-      // White Legal Briefs raised high in fear
+      // White Legal Briefs raised high
       ctx.save();
       ctx.translate(7, -6);
       ctx.rotate(0.15 + Math.sin(now * 0.02) * 0.1);
@@ -1292,7 +1533,6 @@
       ctx.lineWidth = 0.8;
       ctx.strokeRect(-4, -6, 8, 11);
 
-      // Micro legal text lines
       ctx.strokeStyle = "#64748b";
       ctx.lineWidth = 0.8;
       ctx.beginPath();
@@ -1301,7 +1541,6 @@
       ctx.moveTo(-2, 1); ctx.lineTo(2, 1);
       ctx.stroke();
 
-      // Red legal seal
       ctx.fillStyle = "#ef4444";
       ctx.beginPath();
       ctx.arc(1.5, 3, 1.2, 0, Math.PI * 2);
@@ -1312,9 +1551,6 @@
       return;
     }
 
-    // --- NORMAL UNIQUE ENEMY SPRITES ---
-
-    // 1. "Jeffrey": Linen-cream silhouette wearing dark aviators
     if (ghost.name === "Jeffrey") {
       const R = 9.5;
       ctx.fillStyle = "#f8fafc";
@@ -1328,7 +1564,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Linen drape creases
       ctx.strokeStyle = "#e2e8f0";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -1336,30 +1571,25 @@
       ctx.moveTo(3, 1); ctx.lineTo(1, 7);
       ctx.stroke();
 
-      // Silver slick hair crest
       ctx.fillStyle = "#cbd5e1";
       ctx.beginPath();
       ctx.ellipse(0, -10, 6, 2.5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Dark aviator sunglasses with gold wire bridge
+      // Dark Aviator sunglasses
       ctx.fillStyle = "#0f172a";
-      // Teardrop lenses
       ctx.beginPath();
       ctx.ellipse(-4, -3, 3, 2.4, 0.2, 0, Math.PI * 2);
       ctx.ellipse(4, -3, 3, 2.4, -0.2, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.strokeStyle = "#fbbf24"; // Gilded gold aviator bridge
+      ctx.strokeStyle = "#fbbf24";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(-2, -4);
       ctx.lineTo(2, -4);
       ctx.stroke();
-    }
-
-    // 2. "Mohammed": White flowing thobe silhouette with sunglasses & gold watch
-    else if (ghost.name === "Mohammed") {
+    } else if (ghost.name === "Mohammed") {
       const R = 9.5;
       ctx.fillStyle = "#e2e8f0";
       ctx.beginPath();
@@ -1372,32 +1602,25 @@
       ctx.closePath();
       ctx.fill();
 
-      // Thobe collar gold embroidery line
       ctx.strokeStyle = "#fbbf24";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, 0); ctx.lineTo(0, 7);
       ctx.stroke();
 
-      // Sleek modern dark sunglasses
       ctx.fillStyle = "#090d16";
       ctx.fillRect(-6, -4, 5, 2.8);
       ctx.fillRect(1, -4, 5, 2.8);
       ctx.fillRect(-1.5, -3.5, 3, 1);
 
-      // Gold watch accent with sparkle glint
       ctx.fillStyle = "#fbbf24";
       ctx.fillRect(6.5, 2, 3, 3.5);
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
       ctx.arc(8, 3.5, 1, 0, Math.PI * 2);
       ctx.fill();
-    }
-
-    // 3. "Charlie": Oversized navy blue blazer holding mini podcast microphone
-    else if (ghost.name === "Charlie") {
+    } else if (ghost.name === "Charlie") {
       const R = 9.5;
-      // Oversized Navy Blue Blazer
       ctx.fillStyle = "#1e3a8a";
       ctx.beginPath();
       ctx.arc(0, -2, R, Math.PI, 0, false);
@@ -1409,7 +1632,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Lapels
       ctx.strokeStyle = "#2563eb";
       ctx.lineWidth = 1.2;
       ctx.beginPath();
@@ -1417,7 +1639,6 @@
       ctx.moveTo(4, -1); ctx.lineTo(1, 5); ctx.lineTo(0, 7);
       ctx.stroke();
 
-      // Tousled mop hair
       ctx.fillStyle = "#0f172a";
       ctx.beginPath();
       ctx.arc(-3, -9, 3, 0, Math.PI * 2);
@@ -1425,7 +1646,6 @@
       ctx.arc(5, -8, 2.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Eyes
       ctx.fillStyle = "#f8fafc";
       ctx.fillRect(-4, -4, 3, 3);
       ctx.fillRect(1, -4, 3, 3);
@@ -1433,19 +1653,15 @@
       ctx.fillRect(-3, -3, 2, 2);
       ctx.fillRect(2, -3, 2, 2);
 
-      // Mini Podcast Microphone held in front
-      ctx.fillStyle = "#94a3b8"; // Silver boom/stand
+      // Mini Podcast Mic
+      ctx.fillStyle = "#94a3b8";
       ctx.fillRect(5, 0, 1.5, 7);
-      ctx.fillStyle = "#334155"; // Dark foam windscreen
+      ctx.fillStyle = "#334155";
       ctx.beginPath();
       ctx.ellipse(6, 0, 2.5, 3.2, 0, 0, Math.PI * 2);
       ctx.fill();
-    }
-
-    // 4. "Jose": Khaki border patrol agent uniform with clipboard
-    else if (ghost.name === "Jose") {
+    } else if (ghost.name === "Jose") {
       const R = 9.5;
-      // Khaki uniform
       ctx.fillStyle = "#78716c";
       ctx.beginPath();
       ctx.arc(0, -2, R, Math.PI, 0, false);
@@ -1457,12 +1673,10 @@
       ctx.closePath();
       ctx.fill();
 
-      // Uniform shoulder epaulets
       ctx.fillStyle = "#57534e";
       ctx.fillRect(-R, -1, 3, 2);
       ctx.fillRect(R - 3, -1, 3, 2);
 
-      // Border patrol campaign hat
       ctx.fillStyle = "#57534e";
       ctx.beginPath();
       ctx.ellipse(0, -9, 8, 2.5, 0, 0, Math.PI * 2);
@@ -1472,7 +1686,6 @@
       ctx.ellipse(0, -11, 4, 3, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Serious eyes
       ctx.fillStyle = "#f8fafc";
       ctx.fillRect(-4, -4, 3, 2);
       ctx.fillRect(1, -4, 3, 2);
@@ -1480,21 +1693,16 @@
       ctx.fillRect(-3, -4, 2, 2);
       ctx.fillRect(2, -4, 2, 2);
 
-      // Clipboard in hand
-      ctx.fillStyle = "#a16207"; // Brown clipboard
+      // Clipboard
+      ctx.fillStyle = "#a16207";
       ctx.fillRect(-8, 1, 5, 7);
-      ctx.fillStyle = "#f8fafc"; // White paper sheets
+      ctx.fillStyle = "#f8fafc";
       ctx.fillRect(-7.5, 2, 4, 5.5);
-      ctx.fillStyle = "#cbd5e1"; // Silver clip
+      ctx.fillStyle = "#cbd5e1";
       ctx.fillRect(-6.5, 0.5, 2, 1.2);
-    }
+    } else if (ghost.name === "Cholesterol") {
+      const R = 13.5;
 
-    // 5. "Cholesterol": Massive lumbering golden-yellow blob with pulsating outer border
-    else if (ghost.name === "Cholesterol") {
-      const R = 13.5; // Massive size
-      const pulseBorder = Math.sin(now * 0.007) * 2;
-
-      // Pulsating outer lipid border
       ctx.save();
       ctx.fillStyle = "#ca8a04";
       ctx.beginPath();
@@ -1510,7 +1718,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Golden-Yellow Blob Body (#eab308)
       ctx.fillStyle = "#eab308";
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
@@ -1525,7 +1732,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Shiny cholesterol lipid globules
       ctx.fillStyle = "#fef08a";
       ctx.beginPath();
       ctx.arc(-4, -5, 3.5, 0, Math.PI * 2);
@@ -1534,11 +1740,9 @@
       ctx.arc(5, -3, 2.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Small squinting sluggish eyes
       ctx.fillStyle = "#78350f";
       ctx.fillRect(-5, 0, 3, 2);
       ctx.fillRect(2, 0, 3, 2);
-
       ctx.restore();
     }
 
@@ -1550,7 +1754,6 @@
     ctx.fillStyle = "#1e293b";
     ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
 
-    // Subtle slate floor tile seams
     ctx.strokeStyle = "rgba(51, 65, 85, 0.4)";
     ctx.lineWidth = 1;
     for (let r = 3; r <= 32; r++) {
@@ -1566,7 +1769,6 @@
       ctx.stroke();
     }
 
-    // Procedural slate cracks
     ctx.strokeStyle = "rgba(15, 23, 42, 0.7)";
     ctx.lineWidth = 1.2;
     floorCracks.forEach(cr => {
@@ -1576,7 +1778,6 @@
       ctx.stroke();
     });
 
-    // Double-Bordered Gilded Gold Moldings
     for (let r = 3; r <= 32; r++) {
       for (let c = 0; c < COLS; c++) {
         const tile = maze[r][c];
@@ -1600,28 +1801,16 @@
           ctx.strokeStyle = "#fbbf24";
 
           if (topOpen) {
-            ctx.beginPath();
-            ctx.moveTo(x, y + 1);
-            ctx.lineTo(x + TILE_SIZE, y + 1);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x, y + 1); ctx.lineTo(x + TILE_SIZE, y + 1); ctx.stroke();
           }
           if (botOpen) {
-            ctx.beginPath();
-            ctx.moveTo(x, y + TILE_SIZE - 1);
-            ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE - 1);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x, y + TILE_SIZE - 1); ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE - 1); ctx.stroke();
           }
           if (leftOpen) {
-            ctx.beginPath();
-            ctx.moveTo(x + 1, y);
-            ctx.lineTo(x + 1, y + TILE_SIZE);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + 1, y); ctx.lineTo(x + 1, y + TILE_SIZE); ctx.stroke();
           }
           if (rightOpen) {
-            ctx.beginPath();
-            ctx.moveTo(x + TILE_SIZE - 1, y);
-            ctx.lineTo(x + TILE_SIZE - 1, y + TILE_SIZE);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + TILE_SIZE - 1, y); ctx.lineTo(x + TILE_SIZE - 1, y + TILE_SIZE); ctx.stroke();
           }
 
           ctx.strokeStyle = "rgba(254, 240, 138, 0.45)";
@@ -1634,7 +1823,7 @@
       }
     }
 
-    // Evidence Locker Security Gate & Plaque
+    // Evidence Locker Gate & Plaque
     const lockerX = 10 * TILE_SIZE;
     const lockerY = 15 * TILE_SIZE;
     const lockerW = 8 * TILE_SIZE;
@@ -1681,7 +1870,7 @@
     ctx.fillText("▶▶", LOGICAL_WIDTH - 10, 17.5 * TILE_SIZE);
     ctx.restore();
 
-    // Draw Collectibles
+    // Collectibles
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const item = maze[r][c];
@@ -1697,7 +1886,7 @@
     }
   }
 
-  // --- 9. HUD DISPLAY & OVERLAYS ---
+  // --- 9. HUD DISPLAY & GAME STATE OVERLAYS ---
   function drawHUD() {
     ctx.save();
     ctx.fillStyle = "#fbbf24";
@@ -1722,7 +1911,7 @@
     ctx.fillText(`${round}`, LOGICAL_WIDTH - 16, 34);
 
     // Executive Immunity Banner
-    if (immunityTime > 0) {
+    if (immunityTime > 0 && gameState === 'PLAYING') {
       const bannerPulse = Math.sin(Date.now() * 0.02) > 0;
       ctx.fillStyle = bannerPulse ? "#fde047" : "#f59e0b";
       ctx.font = "bold 13px sans-serif";
@@ -1730,7 +1919,7 @@
       ctx.fillText(`★ EXECUTIVE IMMUNITY: ${immunityTime.toFixed(1)}s ★`, LOGICAL_WIDTH / 2, 52);
     }
 
-    // Bottom Row: Lives (Represented by Mini Golden Hair Tufts!) & Pellets
+    // Bottom Row: Lives (Mini Golden Hair Tufts) & Burgers
     const botY = 34.5 * TILE_SIZE;
     ctx.textAlign = "left";
     ctx.fillStyle = "#94a3b8";
@@ -1757,53 +1946,64 @@
       if (p.alpha <= 0) popupScores.splice(i, 1);
     }
 
-    // Modals
-    if (gameOver) {
-      ctx.fillStyle = "rgba(11, 15, 25, 0.88)";
-      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-
-      ctx.strokeStyle = "#ef4444";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(60, 260, LOGICAL_WIDTH - 120, 180);
-
-      ctx.fillStyle = "#ef4444";
-      ctx.font = "bold 32px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("SUBPOENA SERVED", LOGICAL_WIDTH / 2, 315);
-
-      ctx.fillStyle = "#f8fafc";
-      ctx.font = "bold 16px sans-serif";
-      ctx.fillText(`FINAL SCORE: ${score}`, LOGICAL_WIDTH / 2, 355);
+    // --- STATE 1: START (Dim Bunker & Pulsing Insert Coin) ---
+    if (gameState === 'START') {
+      ctx.fillStyle = "rgba(11, 15, 25, 0.78)";
+      ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
 
       ctx.fillStyle = "#fbbf24";
-      ctx.font = "bold 14px monospace";
-      ctx.fillText("TAP OR PRESS SPACE TO RETRY", LOGICAL_WIDTH / 2, 405);
-    } else if (victory) {
-      ctx.fillStyle = "rgba(11, 15, 25, 0.88)";
-      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-
-      ctx.strokeStyle = "#fbbf24";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(60, 260, LOGICAL_WIDTH - 120, 180);
-
-      ctx.fillStyle = "#fbbf24";
-      ctx.font = "bold 30px sans-serif";
+      ctx.font = "bold 26px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("EVIDENCE CONSUMED!", LOGICAL_WIDTH / 2, 315);
-
-      ctx.fillStyle = "#fde047";
-      ctx.font = "bold 16px sans-serif";
-      ctx.fillText(`TOTAL SCORE: ${score}`, LOGICAL_WIDTH / 2, 355);
+      ctx.fillText("BUNKER MUNCHER", LOGICAL_WIDTH / 2, 280);
 
       ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 14px monospace";
-      ctx.fillText("TAP TO ADVANCE TO NEXT ROUND", LOGICAL_WIDTH / 2, 405);
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("THE RESISTANCE ARCADE // CABINET 3", LOGICAL_WIDTH / 2, 305);
+
+      // Pulsing "INSERT COIN // TAP TO ESCAPE BUNKER"
+      const pulse = Math.sin(Date.now() * 0.006) > 0;
+      ctx.fillStyle = pulse ? "#fde047" : "#fbbf24";
+      ctx.font = "bold 15px monospace";
+      ctx.fillText("★ INSERT COIN // TAP TO ESCAPE BUNKER ★", LOGICAL_WIDTH / 2, 370);
+
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "11px monospace";
+      ctx.fillText("USE ARROW KEYS, WASD, OR SWIPE TO MOVE", LOGICAL_WIDTH / 2, 410);
+
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(60, 240, LOGICAL_WIDTH - 120, 200);
+    }
+
+    // --- STATE 3: LEVEL CLEAR (Board Flashes Gold, Speed +5%) ---
+    else if (gameState === 'LEVEL_CLEAR') {
+      const flashAlpha = 0.25 + Math.sin(Date.now() * 0.015) * 0.15;
+      ctx.fillStyle = `rgba(251, 191, 36, ${flashAlpha})`;
+      ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
+
+      ctx.fillStyle = "rgba(11, 15, 25, 0.88)";
+      ctx.fillRect(50, 270, LOGICAL_WIDTH - 100, 160);
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(50, 270, LOGICAL_WIDTH - 100, 160);
+
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 24px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("EVIDENCE DESTROYED!", LOGICAL_WIDTH / 2, 320);
+
+      ctx.fillStyle = "#fde047";
+      ctx.font = "bold 13px monospace";
+      ctx.fillText("ENEMY SPEEDS ACCELERATING +5%", LOGICAL_WIDTH / 2, 355);
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 12px monospace";
+      ctx.fillText(`PREPARING ROUND ${round + 1}...`, LOGICAL_WIDTH / 2, 395);
     }
 
     ctx.restore();
   }
 
-  // Draw Death Particles (Coins & Baby Powder)
   function drawDeathParticles(ctx) {
     deathAnim.particles.forEach(p => {
       ctx.save();
@@ -1834,16 +2034,33 @@
 
   // --- 10. GAME LOGIC & COLLISION ---
   function updateGame(dt) {
-    if (gameOver || victory) return;
+    if (gameState === 'START' || gameState === 'GAMEOVER') return;
 
-    // Handle Death Animation
+    if (gameState === 'LEVEL_CLEAR') {
+      levelClearTimer -= dt;
+      if (levelClearTimer <= 0) {
+        // Advance round with +5% enemy speed
+        round++;
+        enemyGlobalSpeedMult *= 1.05;
+        maze = buildGrid();
+        totalPellets = countPellets(maze);
+        pelletsRemaining = totalPellets;
+        immunityTime = 0;
+        popupScores = [];
+        player.reset();
+        ghosts.forEach(g => g.reset());
+        gameState = 'PLAYING';
+      }
+      return;
+    }
+
+    // Death Animation Update
     if (deathAnim.active) {
       deathAnim.timer += dt;
       deathAnim.spinAngle += 15 * dt;
       deathAnim.hairOffsetY -= 40 * dt;
       deathAnim.scale = Math.max(0, 1 - deathAnim.timer / 1.0);
 
-      // Update death particles
       deathAnim.particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
@@ -1863,7 +2080,7 @@
         deathAnim.active = false;
         lives--;
         if (lives <= 0) {
-          gameOver = true;
+          showGameOverModal();
         } else {
           player.reset();
           ghosts.forEach(g => g.reset());
@@ -1872,7 +2089,7 @@
       return;
     }
 
-    // Executive Immunity timer countdown (8 seconds)
+    // Executive Immunity timer
     if (immunityTime > 0) {
       immunityTime -= dt;
       if (immunityTime <= 0) {
@@ -1893,61 +2110,62 @@
 
       if (dist < hitRadius) {
         if (g.state === 'FRIGHTENED' && !g.ignoresImmunity) {
-          // Pac-Don eats frightened enemy!
           g.state = 'RETURNING';
           score += ghostStreakScore;
           popupScores.push({ text: ghostStreakScore, x: g.x, y: g.y, alpha: 1.0 });
-          audio.playEnemyCrunchChime(); // Arcade crunch chime!
+          audio.playEnemyCrunchChime();
           ghostStreakScore *= 2;
-          if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('snakmanr_hi', highScore.toString());
-          }
+          updateHighScore();
         } else if (g.state === 'CHASE' || g.ignoresImmunity) {
-          // Pac-Don dies on collision with active enemy or Cholesterol!
           triggerDeath();
           break;
         }
       }
     }
 
-    // Win condition
-    if (pelletsRemaining <= 0) {
-      victory = true;
+    // Win condition check -> LEVEL CLEAR
+    if (pelletsRemaining <= 0 && gameState === 'PLAYING') {
+      gameState = 'LEVEL_CLEAR';
+      levelClearTimer = 2.0;
+      audio.playBrassFanfare();
     }
   }
 
-  function resetRound(nextRound = false) {
-    if (nextRound) round++;
-    else {
-      round = 1;
-      score = 0;
-      lives = 3;
-    }
+  function startNewGame() {
+    hideGameOverModal();
+    round = 1;
+    score = 0;
+    lives = 3;
+    enemyGlobalSpeedMult = 1.0;
     maze = buildGrid();
     totalPellets = countPellets(maze);
     pelletsRemaining = totalPellets;
     immunityTime = 0;
-    gameOver = false;
-    victory = false;
     popupScores = [];
     deathAnim.active = false;
     player.reset();
     ghosts.forEach(g => g.reset());
+    gameState = 'PLAYING';
   }
 
-  // --- 11. INPUT CONTROLLER (KEYBOARD & TOUCH) ---
+  // --- 11. INPUT CONTROLLER ---
   function handleDirectionInput(dx, dy) {
     audio.init();
     audio.resume();
-    gameStarted = true;
 
-    if (gameOver) {
-      resetRound(false);
+    if (gameState === 'START') {
+      startNewGame();
+      player.nextDirX = dx;
+      player.nextDirY = dy;
       return;
     }
-    if (victory) {
-      resetRound(true);
+
+    if (gameState === 'GAMEOVER') {
+      startNewGame();
+      return;
+    }
+
+    if (gameState === 'LEVEL_CLEAR') {
       return;
     }
 
@@ -1982,14 +2200,23 @@
         handleDirectionInput(1, 0);
         break;
       case ' ':
+      case 'Enter':
         e.preventDefault();
-        if (gameOver) resetRound(false);
-        else if (victory) resetRound(true);
+        if (gameState === 'START' || gameState === 'GAMEOVER') {
+          startNewGame();
+        }
         break;
     }
   });
 
-  // Touch Swipe Gesture Detection
+  restartBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    audio.init();
+    audio.resume();
+    startNewGame();
+  });
+
+  // Touch Swipe on Canvas
   let touchStartX = 0;
   let touchStartY = 0;
 
@@ -1997,8 +2224,12 @@
     e.preventDefault();
     audio.init();
     audio.resume();
-    if (gameOver) { resetRound(false); return; }
-    if (victory) { resetRound(true); return; }
+
+    if (gameState === 'START') {
+      startNewGame();
+      return;
+    }
+
     const t = e.touches[0];
     touchStartX = t.clientX;
     touchStartY = t.clientY;
@@ -2026,7 +2257,7 @@
     }
   }, { passive: false });
 
-  // Virtual Touch D-Pad
+  // Virtual D-Pad Buttons
   document.getElementById('t-up').addEventListener('pointerdown', (e) => {
     e.preventDefault();
     handleDirectionInput(0, -1);
@@ -2093,7 +2324,6 @@
         ctx.fill();
         ctx.restore();
 
-        // Golden hair tuft launching upward away from head!
         ctx.save();
         ctx.translate(deathAnim.x, deathAnim.y + deathAnim.hairOffsetY);
         ctx.rotate(deathAnim.spinAngle * 0.5);

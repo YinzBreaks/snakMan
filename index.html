@@ -920,11 +920,12 @@
     lastDirY: 0,
     nextDirX: 0,
     nextDirY: 0,
+    facing: 'RIGHT', // 'RIGHT' or 'LEFT'
+    vTilt: 0,        // vertical tilt angle
     baseSpeed: 2.3,
     speed: 2.3,
     mouthAngle: 0,
     mouthOpening: true,
-    angle: 0,
 
     reset() {
       this.x = 13.5 * TILE_SIZE;
@@ -935,7 +936,8 @@
       this.lastDirY = 0;
       this.nextDirX = 0;
       this.nextDirY = 0;
-      this.angle = 0;
+      this.facing = 'RIGHT';
+      this.vTilt = 0;
     },
 
     update(dt) {
@@ -1005,10 +1007,18 @@
       this.x += this.dirX * this.speed;
       this.y += this.dirY * this.speed;
 
-      if (this.dirX > 0) this.angle = 0;
-      else if (this.dirX < 0) this.angle = Math.PI;
-      else if (this.dirY > 0) this.angle = Math.PI / 2;
-      else if (this.dirY < 0) this.angle = -Math.PI / 2;
+      // Update facing and vertical tilt without flipping upside down!
+      if (this.dirX > 0) {
+        this.facing = 'RIGHT';
+        this.vTilt = 0;
+      } else if (this.dirX < 0) {
+        this.facing = 'LEFT'; // Mirrored horizontally via scale(-1, 1)
+        this.vTilt = 0;
+      } else if (this.dirY < 0) {
+        this.vTilt = -Math.PI / 5; // -36 deg upward tilt
+      } else if (this.dirY > 0) {
+        this.vTilt = Math.PI / 5;  // +36 deg downward tilt
+      }
 
       // Animate mouth
       if (this.dirX !== 0 || this.dirY !== 0) {
@@ -1027,12 +1037,12 @@
         }
       }
 
-      // Warp tunnel Row 17
+      // Warp tunnel Row 17 wrapping across screen edges
       if (tileRow === 17) {
-        if (this.x < -TILE_SIZE / 2) {
-          this.x = LOGICAL_WIDTH + TILE_SIZE / 2 - 2;
-        } else if (this.x > LOGICAL_WIDTH + TILE_SIZE / 2) {
-          this.x = -TILE_SIZE / 2 + 2;
+        if (this.x < -10) {
+          this.x = LOGICAL_WIDTH + 8;
+        } else if (this.x > LOGICAL_WIDTH + 10) {
+          this.x = -8;
         }
       }
 
@@ -1069,7 +1079,12 @@
   };
 
   function canWalk(col, row, isGhost = false) {
-    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return false;
+    if (row === 17) {
+      // Row 17 warp tunnel wraps across screen edges seamlessly
+      col = ((col % COLS) + COLS) % COLS;
+    } else {
+      if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return false;
+    }
     const tile = maze[row][col];
     if (tile === 'W') return false;
     if (tile === 'D') return isGhost;
@@ -1304,11 +1319,12 @@
       this.x += this.dirX * this.speed;
       this.y += this.dirY * this.speed;
 
+      // Warp tunnel Row 17 wrapping across screen edges
       if (tileRow === 17) {
-        if (this.x < -TILE_SIZE / 2) {
-          this.x = LOGICAL_WIDTH + TILE_SIZE / 2 - 2;
-        } else if (this.x > LOGICAL_WIDTH + TILE_SIZE / 2) {
-          this.x = -TILE_SIZE / 2 + 2;
+        if (this.x < -10) {
+          this.x = LOGICAL_WIDTH + 8;
+        } else if (this.x > LOGICAL_WIDTH + 10) {
+          this.x = -8;
         }
       }
     }
@@ -1393,7 +1409,7 @@
     ctx.restore();
   }
 
-  function drawPacDon(ctx, x, y, angle, mouthAngle) {
+  function drawPacDon(ctx, x, y, facing, vTilt, mouthAngle) {
     ctx.save();
     ctx.translate(x, y);
 
@@ -1409,7 +1425,15 @@
       ctx.restore();
     }
 
-    ctx.rotate(angle);
+    // Mirror horizontally when moving Left so hair stays on top!
+    if (facing === 'LEFT') {
+      ctx.scale(-1, 1);
+    }
+
+    // Vertical angle tilt when moving UP/DOWN
+    if (vTilt) {
+      ctx.rotate(vTilt);
+    }
 
     const R = 11.5;
     const grad = ctx.createRadialGradient(-2, -3, 2, 0, 0, R);
@@ -1424,11 +1448,36 @@
     ctx.closePath();
     ctx.fill();
 
+    // Signature Puffy White Baby Diaper on lower section
+    ctx.save();
+    ctx.fillStyle = "#f8fafc";
+    ctx.beginPath();
+    ctx.arc(0, 0, R + 0.3, 0.38, Math.PI - 0.38, false);
+    ctx.quadraticCurveTo(0, 4.0, Math.cos(0.38) * (R + 0.3), Math.sin(0.38) * (R + 0.3));
+    ctx.closePath();
+    ctx.fill();
+
+    // Diaper contour & creases
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.moveTo(-R * 0.65, 4.2);
+    ctx.quadraticCurveTo(0, 6.2, R * 0.65, 4.2);
+    ctx.stroke();
+
+    // Pastel cyan diaper tape fastener tabs
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillRect(-R * 0.55, 4.2, 3.2, 2.2);
+    ctx.fillRect(R * 0.25, 4.2, 3.2, 2.2);
+    ctx.restore();
+
+    // Pale White Raccoon Eye Circles
     ctx.fillStyle = "#fef08a";
     ctx.beginPath();
     ctx.ellipse(3, -5.5, 4.2, 3, 0.2, 0, Math.PI * 2);
     ctx.fill();
 
+    // Squinting Eye Slot
     ctx.fillStyle = "#0f172a";
     ctx.beginPath();
     ctx.ellipse(4, -5.5, 2.2, 1, 0.1, 0, Math.PI * 2);
@@ -1456,27 +1505,64 @@
     ctx.restore();
   }
 
-  // Mini Golden Hair Tuft (for HUD Lives)
-  function drawMiniHairTuft(ctx, x, y) {
+  // Full Mini Pac-Don in Diaper (for HUD Lives Remaining)
+  function drawMiniPacDonLife(ctx, x, y) {
     ctx.save();
     ctx.translate(x, y);
+
+    const R = 6.5;
+
+    // Orange Body
+    const grad = ctx.createRadialGradient(-1, -1, 1, 0, 0, R);
+    grad.addColorStop(0, "#fb923c");
+    grad.addColorStop(1, "#ea580c");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, R, 0.35, Math.PI * 2 - 0.35, false);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Puffy White Diaper
+    ctx.fillStyle = "#f8fafc";
+    ctx.beginPath();
+    ctx.arc(0, 0, R + 0.2, 0.45, Math.PI - 0.45, false);
+    ctx.quadraticCurveTo(0, 2.2, Math.cos(0.45) * (R + 0.2), Math.sin(0.45) * (R + 0.2));
+    ctx.closePath();
+    ctx.fill();
+
+    // Diaper tape tabs (blue)
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillRect(-2.5, 2.2, 1.8, 1.2);
+    ctx.fillRect(1.0, 2.2, 1.8, 1.2);
+
+    // Mini raccoon eye & squint
+    ctx.fillStyle = "#fef08a";
+    ctx.beginPath();
+    ctx.ellipse(1.8, -3.0, 2.2, 1.6, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(2.0, -3.2, 1.2, 0.8);
+
+    // Mini golden pompadour hair
     ctx.fillStyle = "#fde047";
     ctx.beginPath();
-    ctx.moveTo(-7, 2);
-    ctx.quadraticCurveTo(-8, -5, -2, -8);
-    ctx.quadraticCurveTo(4, -9, 7, -5);
-    ctx.quadraticCurveTo(8, -2, 4, -3);
-    ctx.quadraticCurveTo(1, -4, -2, -2);
-    ctx.quadraticCurveTo(-5, -1, -7, 2);
+    ctx.moveTo(-5.5, -1);
+    ctx.quadraticCurveTo(-6, -7, -1, -9);
+    ctx.quadraticCurveTo(3, -10, 5.5, -6);
+    ctx.quadraticCurveTo(6.5, -4, 3, -5);
+    ctx.quadraticCurveTo(1, -5.5, -1.5, -4);
+    ctx.quadraticCurveTo(-4.5, -3.5, -5.5, -1);
     ctx.closePath();
     ctx.fill();
 
     ctx.strokeStyle = "#ca8a04";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.8;
     ctx.beginPath();
-    ctx.moveTo(-4, -5);
-    ctx.quadraticCurveTo(2, -7, 5, -4);
+    ctx.moveTo(-3, -6);
+    ctx.quadraticCurveTo(1, -8, 4, -5);
     ctx.stroke();
+
     ctx.restore();
   }
 
@@ -1921,7 +2007,7 @@
       ctx.fillText(`★ EXECUTIVE IMMUNITY: ${immunityTime.toFixed(1)}s ★`, LOGICAL_WIDTH / 2, 52);
     }
 
-    // Bottom Row: Lives (Mini Golden Hair Tufts) & Burgers
+    // Bottom Row: Lives (Mini Pac-Don in Diaper) & Burgers
     const botY = 34.5 * TILE_SIZE;
     ctx.textAlign = "left";
     ctx.fillStyle = "#94a3b8";
@@ -1929,7 +2015,7 @@
     ctx.fillText("LIVES:", 16, botY);
 
     for (let i = 0; i < lives; i++) {
-      drawMiniHairTuft(ctx, 70 + i * 22, botY - 4);
+      drawMiniPacDonLife(ctx, 72 + i * 22, botY - 3);
     }
 
     ctx.textAlign = "right";
@@ -2324,6 +2410,18 @@
         ctx.beginPath();
         ctx.ellipse(4, -5.5, 2.2, 1, 0.1, 0, Math.PI * 2);
         ctx.fill();
+      
+        // Diaper during death spin
+        ctx.fillStyle = "#f8fafc";
+        ctx.beginPath();
+        ctx.arc(0, 0, R + 0.3, 0.38, Math.PI - 0.38, false);
+        ctx.quadraticCurveTo(0, 4.0, Math.cos(0.38) * (R + 0.3), Math.sin(0.38) * (R + 0.3));
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(-R * 0.55, 4.2, 3.2, 2.2);
+        ctx.fillRect(R * 0.25, 4.2, 3.2, 2.2);
+
         ctx.restore();
 
         ctx.save();
@@ -2348,7 +2446,7 @@
         ctx.restore();
       }
     } else {
-      drawPacDon(ctx, player.x, player.y, player.angle, player.mouthAngle);
+      drawPacDon(ctx, player.x, player.y, player.facing, player.vTilt, player.mouthAngle);
     }
 
     drawHUD();

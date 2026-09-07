@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>⚡ THE RESISTANCE ARCADE // CABINET 3: SNAKMAN</title>
   <style>
     * {
@@ -95,8 +95,6 @@
 
     canvas {
       display: block;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
       max-width: 100%;
       max-height: 100%;
       width: auto;
@@ -138,6 +136,8 @@
       padding: 16px 20px;
       width: 94%;
       max-width: 440px;
+      max-height: 90dvh;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -300,25 +300,33 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      justify-content: space-between;
+      justify-content: space-around;
       width: 100%;
       max-width: 560px;
-      padding: 4px 6px 2px 6px;
-      gap: 10px;
+      padding: 6px 12px;
+      gap: 12px;
       flex-shrink: 0;
       box-sizing: border-box;
       touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .dpad-cluster {
       display: grid;
-      grid-template-columns: 54px 54px 54px;
-      grid-template-rows: 38px 38px 38px;
-      gap: 3px;
+      grid-template-columns: 62px 62px 62px;
+      grid-template-rows: 48px 48px 48px;
+      gap: 4px;
       align-items: center;
       justify-items: center;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: none;
+      padding: 4px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1.5px solid rgba(251, 191, 36, 0.35);
+      border-radius: 14px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
     }
 
     .dpad-btn {
@@ -326,26 +334,39 @@
       height: 100%;
       background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
       border: 2px solid #fbbf24;
-      border-radius: 7px;
+      border-radius: 8px;
       color: #fbbf24;
-      font-size: 20px;
-      font-weight: 900;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
-      touch-action: manipulation;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      touch-action: none;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
       transition: background 0.05s, transform 0.05s, box-shadow 0.05s;
+      padding: 0;
     }
 
     .dpad-btn:active, .dpad-btn.pressed {
-      background: #fbbf24 !important;
+      background: linear-gradient(180deg, #fde047 0%, #f59e0b 100%) !important;
       color: #0b0f19 !important;
-      transform: scale(0.93);
-      box-shadow: 0 0 14px rgba(251, 191, 36, 0.85), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+      border-color: #ffffff !important;
+      transform: scale(0.92);
+      box-shadow: 0 0 18px rgba(251, 191, 36, 1), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .dpad-icon {
+      width: 26px;
+      height: 26px;
+      display: block;
+      filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.6));
+      pointer-events: none;
+    }
+
+    .dpad-btn:active .dpad-icon, .dpad-btn.pressed .dpad-icon {
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+      color: #0b0f19;
     }
 
     #t-up { grid-column: 2; grid-row: 1; }
@@ -359,8 +380,9 @@
       align-items: center;
       justify-content: center;
       color: #fbbf24;
-      font-size: 14px;
-      opacity: 0.65;
+      font-size: 16px;
+      opacity: 0.85;
+      text-shadow: 0 0 8px rgba(251, 191, 36, 0.7);
     }
     #t-right { grid-column: 3; grid-row: 2; }
     #t-down { grid-column: 2; grid-row: 3; }
@@ -368,7 +390,7 @@
     .deck-side-panel {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       flex: 1;
       max-width: 170px;
     }
@@ -377,20 +399,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      padding: 9px 10px;
+      gap: 6px;
+      padding: 11px 12px;
       background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
       border: 1.5px solid #475569;
-      border-radius: 6px;
+      border-radius: 8px;
       color: #cbd5e1;
       font-size: 11px;
-      font-weight: 800;
+      font-weight: 900;
       font-family: inherit;
       cursor: pointer;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      letter-spacing: 0.8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
       touch-action: manipulation;
+      transition: all 0.1s ease;
     }
 
     .deck-btn:active {
@@ -417,6 +440,67 @@
       text-align: center;
       flex-shrink: 0;
       padding-top: 1px;
+    }
+
+    /* Mobile Device Responsiveness (Pixel 9 XL, iPhone 16 Pro Max, Galaxy S24) */
+    @media (max-width: 600px) {
+      body {
+        padding: 0;
+        margin: 0;
+      }
+      #cabinet {
+        max-width: 100vw;
+        width: 100vw;
+        height: 100%;
+        height: 100dvh;
+        padding: 0 0 max(8px, env(safe-area-inset-bottom)) 0;
+      }
+      #marquee {
+        padding: max(5px, env(safe-area-inset-top)) 8px 4px 8px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+      }
+      .cabinet-title {
+        font-size: 11px;
+        letter-spacing: 0.8px;
+      }
+      #canvas-wrapper {
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+        width: 100vw;
+        flex: 1 1 auto;
+      }
+      canvas {
+        width: 100%;
+        height: auto;
+        max-height: 100%;
+        aspect-ratio: 28 / 36;
+        object-fit: contain;
+      }
+      #control-deck {
+        padding: 6px 12px;
+        gap: 10px;
+        max-width: 100vw;
+      }
+      .dpad-cluster {
+        grid-template-columns: min(18vw, 64px) min(18vw, 64px) min(18vw, 64px);
+        grid-template-rows: min(13vw, 50px) min(13vw, 50px) min(13vw, 50px);
+        gap: 4px;
+        padding: 3px;
+      }
+      .dpad-icon {
+        width: min(7.5vw, 28px);
+        height: min(7.5vw, 28px);
+      }
+      .deck-side-panel {
+        max-width: 135px;
+      }
+      .deck-btn {
+        padding: 10px 8px;
+        font-size: 10px;
+      }
     }
   </style>
 </head>
@@ -508,12 +592,20 @@
 
     <!-- Dedicated Arcade Control Deck (Cross D-Pad + Side Controls) -->
     <div id="control-deck">
-      <div class="dpad-cluster">
-        <button class="dpad-btn" id="t-up" aria-label="Up">▲</button>
-        <button class="dpad-btn" id="t-left" aria-label="Left">◀</button>
+      <div class="dpad-cluster" id="dpad-cluster">
+        <button class="dpad-btn" id="t-up" data-dir="0,-1" aria-label="Up">
+          <svg class="dpad-icon" viewBox="0 0 24 24"><path d="M12 3l-9 11h6v7h6v-7h6z" fill="currentColor"/></svg>
+        </button>
+        <button class="dpad-btn" id="t-left" data-dir="-1,0" aria-label="Left">
+          <svg class="dpad-icon" viewBox="0 0 24 24"><path d="M3 12l11-9v6h7v6h-7v6z" fill="currentColor"/></svg>
+        </button>
         <div class="dpad-hub"><span>⚡</span></div>
-        <button class="dpad-btn" id="t-right" aria-label="Right">▶</button>
-        <button class="dpad-btn" id="t-down" aria-label="Down">▼</button>
+        <button class="dpad-btn" id="t-right" data-dir="1,0" aria-label="Right">
+          <svg class="dpad-icon" viewBox="0 0 24 24"><path d="M21 12l-11-9v6H3v6h7v6z" fill="currentColor"/></svg>
+        </button>
+        <button class="dpad-btn" id="t-down" data-dir="0,1" aria-label="Down">
+          <svg class="dpad-icon" viewBox="0 0 24 24"><path d="M12 21l9-11h-6V3H9v7H3z" fill="currentColor"/></svg>
+        </button>
       </div>
 
       <div class="deck-side-panel">
@@ -562,14 +654,17 @@
 
   // High-DPI Canvas Scaling
   function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
     canvas.width = LOGICAL_WIDTH * dpr;
     canvas.height = LOGICAL_HEIGHT * dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
   }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('orientationchange', resizeCanvas);
 
   // --- 2. WEB AUDIO SYNTHESIZER ---
   class SoundEngine {
@@ -1108,6 +1203,15 @@
     }
   })();
 
+  // Mobile Haptic Feedback Helper
+  function triggerHaptic(pattern) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (e) {}
+    }
+  }
+
   // --- 4. GAME STATES & PERSISTENCE ---
   // Game States: 'START', 'PLAYING', 'LEVEL_CLEAR', 'GAMEOVER'
   let gameState = 'START';
@@ -1172,6 +1276,7 @@
   };
 
   function triggerDeath() {
+    triggerHaptic([50, 50, 100]);
     deathAnim.active = true;
     deathAnim.timer = 0;
     deathAnim.x = player.x;
@@ -1383,6 +1488,7 @@
           score += 10;
           pelletsRemaining--;
           audio.playChomp();
+          triggerHaptic(8);
           updateHighScore();
         } else if (item === 'O') {
           maze[curRow][curCol] = ' ';
@@ -1390,6 +1496,7 @@
           pelletsRemaining--;
           audio.playDrinkSlurp();
           audio.playBrassFanfare();
+          triggerHaptic(35);
           immunityTime = 8.0;
           ghostStreakScore = 200;
           ghosts.forEach(g => {
@@ -1715,7 +1822,7 @@
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(scale, scale);
-    const R = 8.5;
+    const R = 9.5;
     const grad = ctx.createRadialGradient(-2, -2, 1, 0, 0, R);
     grad.addColorStop(0, "#fef08a");
     grad.addColorStop(0.5, "#eab308");
@@ -1725,12 +1832,12 @@
     ctx.arc(0, 0, R, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#ca8a04";
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // Embossed bold "T"
     ctx.fillStyle = "#78350f";
-    ctx.font = "bold 9px serif";
+    ctx.font = "bold 10px serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("T", 0.5, 0.5);
@@ -1739,7 +1846,7 @@
 
     // Sparkle star
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(-5, -5, 2, 2);
+    ctx.fillRect(-5, -5, 2.5, 2.5);
     ctx.restore();
   }
 
@@ -1748,29 +1855,29 @@
     ctx.translate(x, y);
     ctx.scale(scale, scale);
     // Gold phone body
-    const grad = ctx.createLinearGradient(-5, -8, 5, 8);
+    const grad = ctx.createLinearGradient(-6, -9, 6, 9);
     grad.addColorStop(0, "#fde047");
     grad.addColorStop(0.5, "#eab308");
     grad.addColorStop(1, "#854d0e");
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.roundRect(-5.5, -8.5, 11, 17, 2);
+    ctx.roundRect(-6.5, -9.5, 13, 19, 2.5);
     ctx.fill();
     ctx.strokeStyle = "#ca8a04";
-    ctx.lineWidth = 0.8;
+    ctx.lineWidth = 1.0;
     ctx.stroke();
 
     // Antenna stub
     ctx.fillStyle = "#eab308";
-    ctx.fillRect(2.5, -11, 2, 3);
+    ctx.fillRect(2.5, -12, 2.2, 3.5);
 
     // OLED Screen
     ctx.fillStyle = "#0f172a";
-    ctx.fillRect(-4, -6.5, 8, 11);
+    ctx.fillRect(-4.5, -7.5, 9, 13);
 
     // Screen icon "T"
     ctx.fillStyle = "#38bdf8";
-    ctx.font = "bold 6px sans-serif";
+    ctx.font = "bold 7px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("T", 0, -1);
@@ -1778,7 +1885,7 @@
     // Home button
     ctx.fillStyle = "#fef08a";
     ctx.beginPath();
-    ctx.arc(0, 6, 1.2, 0, Math.PI * 2);
+    ctx.arc(0, 7, 1.4, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -1791,34 +1898,34 @@
     // High-top golden sneaker upper
     ctx.fillStyle = "#eab308";
     ctx.beginPath();
-    ctx.moveTo(-7, -4);
-    ctx.lineTo(-2, -7);
-    ctx.lineTo(2, -7);
-    ctx.lineTo(4, -3);
-    ctx.lineTo(8, 0);
-    ctx.lineTo(8, 4);
-    ctx.lineTo(-7, 4);
+    ctx.moveTo(-8, -4.5);
+    ctx.lineTo(-2.5, -8);
+    ctx.lineTo(2.5, -8);
+    ctx.lineTo(4.5, -3.5);
+    ctx.lineTo(9, 0);
+    ctx.lineTo(9, 4.5);
+    ctx.lineTo(-8, 4.5);
     ctx.closePath();
     ctx.fill();
 
     // Ankle USA flag patch
     ctx.fillStyle = "#1e3a8a";
-    ctx.fillRect(-5, -5.5, 3, 2.5);
+    ctx.fillRect(-5.5, -6.5, 3.5, 3);
     ctx.fillStyle = "#ef4444";
-    ctx.fillRect(-2, -5.5, 3, 2.5);
+    ctx.fillRect(-2, -6.5, 3.5, 3);
 
     // White midsole & red sole tread
     ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(-7.5, 4, 16, 2.5);
+    ctx.fillRect(-8.5, 4.5, 18, 3);
     ctx.fillStyle = "#ef4444";
-    ctx.fillRect(-7.5, 6.2, 16, 1.2);
+    ctx.fillRect(-8.5, 7.0, 18, 1.5);
 
     // Gold laces crosshatch
     ctx.strokeStyle = "#fde047";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(0, -5); ctx.lineTo(3, -2);
-    ctx.moveTo(1, -3); ctx.lineTo(4, 0);
+    ctx.moveTo(0, -6); ctx.lineTo(3.5, -2);
+    ctx.moveTo(1, -4); ctx.lineTo(4.5, 0);
     ctx.stroke();
     ctx.restore();
   }
@@ -1831,33 +1938,33 @@
     // Golden serving platter
     ctx.fillStyle = "#e2e8f0";
     ctx.beginPath();
-    ctx.ellipse(0, 3, 10, 4.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 3, 11, 5, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#eab308";
-    ctx.lineWidth = 1.0;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
     // Well-done steak
     ctx.fillStyle = "#451a03";
     ctx.beginPath();
-    ctx.ellipse(-2, 2.5, 6, 3.2, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(-2, 2.5, 7, 3.8, -0.2, 0, Math.PI * 2);
     ctx.fill();
 
     // Charred grill marks
     ctx.strokeStyle = "#170a02";
-    ctx.lineWidth = 0.8;
+    ctx.lineWidth = 1.0;
     ctx.beginPath();
-    ctx.moveTo(-5, 1); ctx.lineTo(1, 4);
-    ctx.moveTo(-3, 0.5); ctx.lineTo(3, 3.5);
+    ctx.moveTo(-5, 0.5); ctx.lineTo(1, 4.5);
+    ctx.moveTo(-3, 0); ctx.lineTo(3, 4);
     ctx.stroke();
 
     // Heinz Ketchup Bottle
     ctx.fillStyle = "#dc2626";
-    ctx.fillRect(4.5, -4, 3.5, 6.5);
+    ctx.fillRect(5, -4.5, 4, 7.5);
     ctx.fillStyle = "#fbbf24";
-    ctx.fillRect(5.2, -6, 2.1, 2);
+    ctx.fillRect(5.8, -7, 2.4, 2.5);
     ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(5.0, -2, 2.5, 2.5);
+    ctx.fillRect(5.5, -2.5, 3, 3);
     ctx.restore();
   }
 
@@ -1869,37 +1976,37 @@
     // Holographic gradient card frame
     const now = Date.now();
     const rot = (now * 0.003) % (Math.PI * 2);
-    const grad = ctx.createLinearGradient(Math.cos(rot) * 6, Math.sin(rot) * 8, -Math.cos(rot) * 6, -Math.sin(rot) * 8);
+    const grad = ctx.createLinearGradient(Math.cos(rot) * 7, Math.sin(rot) * 9, -Math.cos(rot) * 7, -Math.sin(rot) * 9);
     grad.addColorStop(0, "#38bdf8");
     grad.addColorStop(0.5, "#ec4899");
     grad.addColorStop(1, "#facc15");
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.roundRect(-6.5, -9, 13, 18, 2);
+    ctx.roundRect(-7.5, -10, 15, 20, 2.5);
     ctx.fill();
 
     // Dark card interior
     ctx.fillStyle = "#090d16";
-    ctx.fillRect(-5, -7.5, 10, 15);
+    ctx.fillRect(-6, -8.5, 12, 17);
 
     // Superhero silhouette with gold hair & red cape
     ctx.fillStyle = "#ef4444";
     ctx.beginPath();
-    ctx.moveTo(-3, -3); ctx.lineTo(-4.5, 3); ctx.lineTo(0, 1);
+    ctx.moveTo(-3.5, -3.5); ctx.lineTo(-5.5, 3.5); ctx.lineTo(0, 1.2);
     ctx.closePath();
     ctx.fill();
 
     // Golden pompadour
     ctx.fillStyle = "#fde047";
     ctx.beginPath();
-    ctx.arc(0, -3.5, 2.5, 0, Math.PI * 2);
+    ctx.arc(0, -4, 3, 0, Math.PI * 2);
     ctx.fill();
 
     // "NFT 1/1" text
     ctx.fillStyle = "#fbbf24";
-    ctx.font = "bold 5px sans-serif";
+    ctx.font = "bold 6px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("NFT", 0, 5.5);
+    ctx.fillText("NFT", 0, 6);
     ctx.restore();
   }
 
@@ -1911,25 +2018,25 @@
     // Dark leather book cover
     ctx.fillStyle = "#0f172a";
     ctx.beginPath();
-    ctx.roundRect(-6, -8, 12, 16, 1.5);
+    ctx.roundRect(-7, -9.5, 14, 19, 2);
     ctx.fill();
 
     // Gold gilt page edge
     ctx.fillStyle = "#fbbf24";
-    ctx.fillRect(4.5, -7, 1.5, 14);
+    ctx.fillRect(5.5, -8.5, 1.8, 17);
 
     // Embossed gold cross on cover
     ctx.fillStyle = "#fde047";
-    ctx.fillRect(-1, -4.5, 2, 7);
-    ctx.fillRect(-3, -2.5, 6, 2);
+    ctx.fillRect(-1.2, -5.5, 2.4, 9);
+    ctx.fillRect(-4, -3, 8, 2.4);
 
     // Tricolor ribbon bookmark hanging from bottom
     ctx.fillStyle = "#ef4444";
-    ctx.fillRect(-2, 7, 1.2, 3.5);
+    ctx.fillRect(-2.5, 8.5, 1.5, 4.5);
     ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(-0.8, 7, 1.2, 3.5);
+    ctx.fillRect(-1, 8.5, 1.5, 4.5);
     ctx.fillStyle = "#1e3a8a";
-    ctx.fillRect(0.4, 7, 1.2, 3.5);
+    ctx.fillRect(0.5, 8.5, 1.5, 4.5);
     ctx.restore();
   }
 
@@ -1940,36 +2047,36 @@
 
     // Gold bracelet links
     ctx.fillStyle = "#d97706";
-    ctx.fillRect(-3, -10, 6, 20);
+    ctx.fillRect(-3.5, -11, 7, 22);
 
     // Octagonal 18k gold case
     ctx.fillStyle = "#fbbf24";
     ctx.beginPath();
-    ctx.arc(0, 0, 7.5, 0, Math.PI * 2);
+    ctx.arc(0, 0, 8.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#ca8a04";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
     // Black dial face
     ctx.fillStyle = "#0f172a";
     ctx.beginPath();
-    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+    ctx.arc(0, 0, 6, 0, Math.PI * 2);
     ctx.fill();
 
     // Diamond hour markers
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(-0.5, -4.5, 1, 1);
-    ctx.fillRect(-0.5, 3.5, 1, 1);
-    ctx.fillRect(-4.5, -0.5, 1, 1);
-    ctx.fillRect(3.5, -0.5, 1, 1);
+    ctx.fillRect(-0.6, -5.2, 1.2, 1.2);
+    ctx.fillRect(-0.6, 4.0, 1.2, 1.2);
+    ctx.fillRect(-5.2, -0.6, 1.2, 1.2);
+    ctx.fillRect(4.0, -0.6, 1.2, 1.2);
 
     // Gold watch hands
     ctx.strokeStyle = "#fbbf24";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(0, 0); ctx.lineTo(1.8, -2.2);
-    ctx.moveTo(0, 0); ctx.lineTo(-2.2, -1);
+    ctx.moveTo(0, 0); ctx.lineTo(2.2, -2.6);
+    ctx.moveTo(0, 0); ctx.lineTo(-2.6, -1.2);
     ctx.stroke();
     ctx.restore();
   }
@@ -1981,25 +2088,25 @@
 
     // Cardboard banker's box body
     ctx.fillStyle = "#b45309";
-    ctx.fillRect(-8, -4, 16, 11);
+    ctx.fillRect(-9, -4.5, 18, 12.5);
     ctx.fillStyle = "#d97706";
-    ctx.fillRect(-8, -6.5, 16, 3);
+    ctx.fillRect(-9, -7.5, 18, 3.5);
 
     // Documents sticking out under lid
     ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(-6, -7.5, 4, 3);
-    ctx.fillRect(0, -8, 5, 3.5);
+    ctx.fillRect(-7, -8.5, 4.5, 3.5);
+    ctx.fillRect(0, -9.2, 6, 4);
 
     // Red "TOP SECRET" stamp
     ctx.fillStyle = "#ef4444";
-    ctx.font = "bold 5px sans-serif";
+    ctx.font = "bold 5.5px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("SECRET", 0, 1);
+    ctx.fillText("SECRET", 0, 1.5);
 
     // Oval handle cutout
     ctx.fillStyle = "#451a03";
     ctx.beginPath();
-    ctx.ellipse(0, 4, 2.5, 1.2, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 4.5, 3, 1.4, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -2031,54 +2138,54 @@
   function drawMiniBurger(ctx, cx, cy) {
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.scale(1.4, 1.4);
+    ctx.scale(1.75, 1.75);
 
     // Top Brioche Bun
     ctx.fillStyle = "#d97706";
     ctx.beginPath();
-    ctx.ellipse(0, -2.5, 6.2, 4.0, 0, Math.PI, 0);
+    ctx.ellipse(0, -2.8, 6.8, 4.4, 0, Math.PI, 0);
     ctx.fill();
 
     // Brioche Highlight
     ctx.fillStyle = "#f59e0b";
     ctx.beginPath();
-    ctx.ellipse(0, -3.2, 4.8, 2.2, 0, Math.PI, 0);
+    ctx.ellipse(0, -3.6, 5.2, 2.4, 0, Math.PI, 0);
     ctx.fill();
 
     // White Sesame Seeds
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(-2.5, -4.5, 1.2, 1.0);
-    ctx.fillRect(0, -5.2, 1.2, 1.0);
-    ctx.fillRect(2.5, -4.2, 1.2, 1.0);
+    ctx.fillRect(-2.8, -5.0, 1.5, 1.2);
+    ctx.fillRect(0, -5.8, 1.5, 1.2);
+    ctx.fillRect(2.8, -4.6, 1.5, 1.2);
 
     // Melted American Cheese slice
     ctx.fillStyle = "#facc15";
     ctx.beginPath();
-    ctx.moveTo(-6.0, -1.0);
-    ctx.lineTo(6.0, -1.0);
-    ctx.lineTo(3.5, 1.0);
-    ctx.lineTo(-2.0, 1.2);
+    ctx.moveTo(-6.6, -1.0);
+    ctx.lineTo(6.6, -1.0);
+    ctx.lineTo(3.8, 1.2);
+    ctx.lineTo(-2.2, 1.4);
     ctx.closePath();
     ctx.fill();
 
     // Ripe Red Tomato Slice
     ctx.fillStyle = "#ef4444";
-    ctx.fillRect(-5.5, -0.8, 11, 1.6);
+    ctx.fillRect(-6.0, -0.8, 12, 1.8);
 
     // Crisp Green Lettuce ruffle
     ctx.fillStyle = "#22c55e";
-    ctx.fillRect(-6.0, 0.4, 12, 1.2);
+    ctx.fillRect(-6.5, 0.4, 13, 1.4);
 
     // Grilled Beef Patty
     ctx.fillStyle = "#451a03";
     ctx.beginPath();
-    ctx.ellipse(0, 1.8, 6.2, 1.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 1.9, 6.8, 2.0, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Bottom Toasted Bun
     ctx.fillStyle = "#b45309";
     ctx.beginPath();
-    ctx.ellipse(0, 3.2, 5.5, 2.2, 0, 0, Math.PI);
+    ctx.ellipse(0, 3.4, 6.0, 2.4, 0, 0, Math.PI);
     ctx.fill();
 
     ctx.restore();
@@ -2088,19 +2195,19 @@
   function drawDietDrink(ctx, cx, cy) {
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.scale(1.4, 1.4);
+    ctx.scale(2.0, 2.0);
 
     drinkGlow += 0.05;
-    const pulse = Math.sin(drinkGlow) * 2;
+    const pulse = Math.sin(drinkGlow) * 2.5;
 
     // Glowing Power Pellet Aura
-    ctx.fillStyle = "rgba(251, 191, 36, 0.30)";
+    ctx.fillStyle = "rgba(251, 191, 36, 0.35)";
     ctx.beginPath();
-    ctx.arc(0, 0, 11 + pulse, 0, Math.PI * 2);
+    ctx.arc(0, 0, 12 + pulse, 0, Math.PI * 2);
     ctx.fill();
 
     // Red & White Striped Straw
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = 2.4;
     ctx.strokeStyle = "#ffffff";
     ctx.beginPath();
     ctx.moveTo(1, -4);
@@ -2133,7 +2240,7 @@
     ctx.fillStyle = "#1e3a8a";
     ctx.fillRect(-4.5, -0.5, 9, 4.5);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 4.5px sans-serif";
+    ctx.font = "bold 5px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("DIET", 0, 1.8);
@@ -2144,13 +2251,13 @@
   function drawPacDon(ctx, x, y, facing, vTilt, mouthAngle) {
     ctx.save();
     ctx.translate(x, y);
-    ctx.scale(1.35, 1.35);
+    ctx.scale(1.65, 1.65);
 
     if (immunityTime > 0) {
       ctx.save();
       const auraPulse = Math.sin(Date.now() * 0.015) * 4;
-      ctx.strokeStyle = "rgba(253, 224, 71, 0.8)";
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(253, 224, 71, 0.9)";
+      ctx.lineWidth = 2.8;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
       ctx.arc(0, 0, 16 + auraPulse, 0, Math.PI * 2);
@@ -2185,14 +2292,14 @@
     ctx.save();
     ctx.fillStyle = "#f8fafc";
     ctx.beginPath();
-    ctx.arc(0, 0, R + 0.3, 0.38, Math.PI - 0.38, false);
-    ctx.quadraticCurveTo(0, 4.0, Math.cos(0.38) * (R + 0.3), Math.sin(0.38) * (R + 0.3));
+    ctx.arc(0, 0, R + 0.4, 0.38, Math.PI - 0.38, false);
+    ctx.quadraticCurveTo(0, 4.0, Math.cos(0.38) * (R + 0.4), Math.sin(0.38) * (R + 0.4));
     ctx.closePath();
     ctx.fill();
 
     // Diaper contour & creases
     ctx.strokeStyle = "#cbd5e1";
-    ctx.lineWidth = 1.0;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(-R * 0.65, 4.2);
     ctx.quadraticCurveTo(0, 6.2, R * 0.65, 4.2);
@@ -2200,8 +2307,8 @@
 
     // Pastel cyan diaper tape fastener tabs
     ctx.fillStyle = "#38bdf8";
-    ctx.fillRect(-R * 0.55, 4.2, 3.2, 2.2);
-    ctx.fillRect(R * 0.25, 4.2, 3.2, 2.2);
+    ctx.fillRect(-R * 0.55, 4.2, 3.5, 2.4);
+    ctx.fillRect(R * 0.25, 4.2, 3.5, 2.4);
     ctx.restore();
 
     // Pale White Raccoon Eye Circles
@@ -2229,7 +2336,7 @@
     ctx.fill();
 
     ctx.strokeStyle = "#ca8a04";
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.moveTo(-6, -11);
     ctx.quadraticCurveTo(2, -14, 8, -10);
@@ -2242,7 +2349,7 @@
   function drawMiniPacDonLife(ctx, x, y) {
     ctx.save();
     ctx.translate(x, y);
-    ctx.scale(1.25, 1.25);
+    ctx.scale(1.55, 1.55);
 
     const R = 6.5;
 
@@ -2260,15 +2367,15 @@
     // Puffy White Diaper
     ctx.fillStyle = "#f8fafc";
     ctx.beginPath();
-    ctx.arc(0, 0, R + 0.2, 0.45, Math.PI - 0.45, false);
-    ctx.quadraticCurveTo(0, 2.2, Math.cos(0.45) * (R + 0.2), Math.sin(0.45) * (R + 0.2));
+    ctx.arc(0, 0, R + 0.3, 0.45, Math.PI - 0.45, false);
+    ctx.quadraticCurveTo(0, 2.2, Math.cos(0.45) * (R + 0.3), Math.sin(0.45) * (R + 0.3));
     ctx.closePath();
     ctx.fill();
 
     // Diaper tape tabs (blue)
     ctx.fillStyle = "#38bdf8";
-    ctx.fillRect(-2.5, 2.2, 1.8, 1.2);
-    ctx.fillRect(1.0, 2.2, 1.8, 1.2);
+    ctx.fillRect(-2.5, 2.2, 2.0, 1.4);
+    ctx.fillRect(1.0, 2.2, 2.0, 1.4);
 
     // Mini raccoon eye & squint
     ctx.fillStyle = "#fef08a";
@@ -2276,7 +2383,7 @@
     ctx.ellipse(1.8, -3.0, 2.2, 1.6, 0.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#0f172a";
-    ctx.fillRect(2.0, -3.2, 1.2, 0.8);
+    ctx.fillRect(2.0, -3.2, 1.4, 1.0);
 
     // Mini golden pompadour hair
     ctx.fillStyle = "#fde047";
@@ -2291,7 +2398,7 @@
     ctx.fill();
 
     ctx.strokeStyle = "#ca8a04";
-    ctx.lineWidth = 0.8;
+    ctx.lineWidth = 1.0;
     ctx.beginPath();
     ctx.moveTo(-3, -6);
     ctx.quadraticCurveTo(1, -8, 4, -5);
@@ -2303,7 +2410,8 @@
   function drawGhost(ctx, ghost) {
     ctx.save();
     ctx.translate(ghost.x, ghost.y);
-    ctx.scale(1.35, 1.35);
+    const gScale = (ghost.name === 'Cholesterol') ? 1.9 : 1.65;
+    ctx.scale(gScale, gScale);
 
     const now = Date.now();
 
@@ -2399,15 +2507,15 @@
       ctx.ellipse(0, -10, 6, 2.5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Dark Aviator sunglasses
+      // Dark Aviator sunglasses with gold wire bridge
       ctx.fillStyle = "#0f172a";
       ctx.beginPath();
-      ctx.ellipse(-4, -3, 3, 2.4, 0.2, 0, Math.PI * 2);
-      ctx.ellipse(4, -3, 3, 2.4, -0.2, 0, Math.PI * 2);
+      ctx.ellipse(-4, -3, 3.2, 2.6, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(4, -3, 3.2, 2.6, -0.2, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = "#fbbf24";
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.moveTo(-2, -4);
       ctx.lineTo(2, -4);
@@ -2437,10 +2545,10 @@
       ctx.fillRect(-1.5, -3.5, 3, 1);
 
       ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(6.5, 2, 3, 3.5);
+      ctx.fillRect(6.5, 2, 3.5, 4);
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(8, 3.5, 1, 0, Math.PI * 2);
+      ctx.arc(8.2, 3.8, 1.2, 0, Math.PI * 2);
       ctx.fill();
     } else if (ghost.name === "Charlie") {
       const R = 9.5;
@@ -2478,10 +2586,10 @@
 
       // Mini Podcast Mic
       ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(5, 0, 1.5, 7);
+      ctx.fillRect(5, 0, 1.8, 7.5);
       ctx.fillStyle = "#334155";
       ctx.beginPath();
-      ctx.ellipse(6, 0, 2.5, 3.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(6, 0, 2.8, 3.6, 0, 0, Math.PI * 2);
       ctx.fill();
     } else if (ghost.name === "Jose") {
       const R = 9.5;
@@ -2518,21 +2626,21 @@
 
       // Clipboard
       ctx.fillStyle = "#a16207";
-      ctx.fillRect(-8, 1, 5, 7);
+      ctx.fillRect(-8, 1, 5.5, 7.5);
       ctx.fillStyle = "#f8fafc";
-      ctx.fillRect(-7.5, 2, 4, 5.5);
+      ctx.fillRect(-7.5, 2, 4.5, 6);
       ctx.fillStyle = "#cbd5e1";
-      ctx.fillRect(-6.5, 0.5, 2, 1.2);
+      ctx.fillRect(-6.5, 0.5, 2.5, 1.4);
     } else if (ghost.name === "Cholesterol") {
-      const R = 13.5;
+      const R = 14;
 
       ctx.save();
       ctx.fillStyle = "#ca8a04";
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
         const ang = (i * Math.PI * 2) / 8;
-        const wobble = Math.sin(now * 0.008 + i * 1.5) * 2.2;
-        const rad = R + 2.5 + wobble;
+        const wobble = Math.sin(now * 0.008 + i * 1.5) * 2.4;
+        const rad = R + 2.8 + wobble;
         const px = Math.cos(ang) * rad;
         const py = Math.sin(ang) * rad;
         if (i === 0) ctx.moveTo(px, py);
@@ -2545,7 +2653,7 @@
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
         const ang = (i * Math.PI * 2) / 8;
-        const wobble = Math.sin(now * 0.008 + i * 1.5) * 1.5;
+        const wobble = Math.sin(now * 0.008 + i * 1.5) * 1.6;
         const rad = R + wobble;
         const px = Math.cos(ang) * rad;
         const py = Math.sin(ang) * rad;
@@ -2557,15 +2665,15 @@
 
       ctx.fillStyle = "#fef08a";
       ctx.beginPath();
-      ctx.arc(-4, -5, 3.5, 0, Math.PI * 2);
+      ctx.arc(-4, -5, 3.8, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(5, -3, 2.5, 0, Math.PI * 2);
+      ctx.arc(5, -3, 2.8, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = "#78350f";
-      ctx.fillRect(-5, 0, 3, 2);
-      ctx.fillRect(2, 0, 3, 2);
+      ctx.fillRect(-5, 0, 3.2, 2.2);
+      ctx.fillRect(2, 0, 3.2, 2.2);
       ctx.restore();
     }
 
@@ -2701,23 +2809,23 @@
       const by = bonusItem.y + bounce;
 
       ctx.save();
-      const haloAlpha = 0.32 + Math.sin(bonusItem.sparkleTimer * 6) * 0.18;
+      const haloAlpha = 0.35 + Math.sin(bonusItem.sparkleTimer * 6) * 0.2;
       ctx.fillStyle = `rgba(251, 191, 36, ${haloAlpha})`;
       ctx.beginPath();
-      ctx.arc(bx, by, 20, 0, Math.PI * 2);
+      ctx.arc(bx, by, 26, 0, Math.PI * 2);
       ctx.fill();
 
-      drawTrumpyItem(ctx, bonusItem.id, bx, by, 1.65);
+      drawTrumpyItem(ctx, bonusItem.id, bx, by, 2.2);
 
       // Rotating sparkle stars
       const spAng = bonusItem.sparkleTimer * 3.5;
       for (let i = 0; i < 3; i++) {
         const a = spAng + (i * Math.PI * 2) / 3;
-        const dist = 14 + Math.sin(bonusItem.sparkleTimer * 5 + i) * 3;
+        const dist = 18 + Math.sin(bonusItem.sparkleTimer * 5 + i) * 3;
         const sx = bx + Math.cos(a) * dist;
         const sy = by + Math.sin(a) * dist;
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(sx - 1, sy - 1, 2, 2);
+        ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
       }
       ctx.restore();
     }
@@ -2741,54 +2849,59 @@
   // --- 9. HUD DISPLAY & GAME STATE OVERLAYS ---
   function drawHUD() {
     ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+    ctx.shadowBlur = 4;
     ctx.fillStyle = "#fbbf24";
-    ctx.font = "bold 12px 'Courier New', monospace";
+    ctx.font = "bold 13px 'Courier New', monospace";
 
     // Top Row HUD
     const curBoard = getCurrentBoard();
     ctx.textAlign = "left";
     ctx.fillText(`1UP SCORE`, 16, 18);
     ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 15px 'Courier New', monospace";
     ctx.fillText(`${score.toString().padStart(6, '0')}`, 16, 34);
 
     ctx.fillStyle = "#fbbf24";
     ctx.textAlign = "center";
+    ctx.font = "bold 13px 'Courier New', monospace";
     ctx.fillText("HIGH SCORE", LOGICAL_WIDTH / 2, 18);
     ctx.fillStyle = "#fde047";
+    ctx.font = "bold 15px 'Courier New', monospace";
     ctx.fillText(`${highScore.toString().padStart(6, '0')}`, LOGICAL_WIDTH / 2, 34);
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#fbbf24";
+    ctx.font = "bold 13px 'Courier New', monospace";
     ctx.fillText(`ROUND ${round}`, LOGICAL_WIDTH - 16, 18);
     ctx.fillStyle = curBoard.wallStroke;
-    ctx.font = "bold 9px sans-serif";
+    ctx.font = "bold 10px sans-serif";
     ctx.fillText(curBoard.name, LOGICAL_WIDTH - 16, 33);
-    ctx.font = "bold 12px 'Courier New', monospace";
 
     // Executive Immunity Banner
     if (immunityTime > 0 && gameState === 'PLAYING') {
       const bannerPulse = Math.sin(Date.now() * 0.02) > 0;
       ctx.fillStyle = bannerPulse ? "#fde047" : "#f59e0b";
-      ctx.font = "bold 13px sans-serif";
+      ctx.font = "bold 15px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(`★ EXECUTIVE IMMUNITY: ${immunityTime.toFixed(1)}s ★`, LOGICAL_WIDTH / 2, 52);
+      ctx.fillText(`★ EXECUTIVE IMMUNITY: ${immunityTime.toFixed(1)}s ★`, LOGICAL_WIDTH / 2, 53);
     }
 
     // Bottom Row: Lives (Mini Pac-Don in Diaper), Burgers, and Trumpy Fruit Tracker
     const botY = 34.5 * TILE_SIZE;
     ctx.textAlign = "left";
     ctx.fillStyle = "#94a3b8";
-    ctx.font = "bold 11px sans-serif";
+    ctx.font = "bold 13px sans-serif";
     ctx.fillText("LIVES:", 16, botY);
 
     for (let i = 0; i < lives; i++) {
-      drawMiniPacDonLife(ctx, 66 + i * 22, botY - 3);
+      drawMiniPacDonLife(ctx, 72 + i * 26, botY - 3);
     }
 
     ctx.textAlign = "center";
     ctx.fillStyle = "#fbbf24";
-    ctx.font = "bold 11px monospace";
-    ctx.fillText(`BURGERS: ${pelletsRemaining}`, LOGICAL_WIDTH / 2 - 20, botY);
+    ctx.font = "bold 13px monospace";
+    ctx.fillText(`BURGERS: ${pelletsRemaining}`, LOGICAL_WIDTH / 2 - 15, botY);
 
     // Trumpy Bonus Items Trophy Bar (Bottom Right)
     const trophyItems = collectedBonusItems.length > 0
@@ -2796,8 +2909,8 @@
       : [TRUMPY_ITEMS[Math.min(round - 1, TRUMPY_ITEMS.length - 1)].id];
     for (let i = 0; i < trophyItems.length; i++) {
       const itId = trophyItems[trophyItems.length - 1 - i];
-      const tx = (LOGICAL_WIDTH - 20) - i * 22;
-      drawTrumpyItem(ctx, itId, tx, botY - 3, 0.78);
+      const tx = (LOGICAL_WIDTH - 24) - i * 26;
+      drawTrumpyItem(ctx, itId, tx, botY - 3, 1.15);
     }
 
     // Floating Popup Scores
@@ -2806,7 +2919,7 @@
       p.y -= 0.5;
       p.alpha -= 0.015;
       ctx.fillStyle = `rgba(253, 224, 71, ${p.alpha})`;
-      ctx.font = "bold 12px sans-serif";
+      ctx.font = "bold 13px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(`+${p.text}`, p.x, p.y);
       if (p.alpha <= 0) popupScores.splice(i, 1);
@@ -2814,31 +2927,31 @@
 
     // --- STATE 1: START (Dim Bunker & Pulsing Insert Coin) ---
     if (gameState === 'START') {
-      ctx.fillStyle = "rgba(11, 15, 25, 0.78)";
+      ctx.fillStyle = "rgba(11, 15, 25, 0.85)";
       ctx.fillRect(0, 3 * TILE_SIZE, LOGICAL_WIDTH, 30 * TILE_SIZE);
 
       ctx.fillStyle = "#fbbf24";
-      ctx.font = "bold 28px sans-serif";
+      ctx.font = "bold 32px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("SNAKMAN", LOGICAL_WIDTH / 2, 280);
+      ctx.fillText("SNAKMAN", LOGICAL_WIDTH / 2, 275);
 
       ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 11px monospace";
-      ctx.fillText("THE RESISTANCE ARCADE // CABINET 3", LOGICAL_WIDTH / 2, 305);
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("THE RESISTANCE ARCADE // CABINET 3", LOGICAL_WIDTH / 2, 300);
 
       // Pulsing "INSERT COIN // TAP TO ESCAPE BUNKER"
       const pulse = Math.sin(Date.now() * 0.006) > 0;
       ctx.fillStyle = pulse ? "#fde047" : "#fbbf24";
       ctx.font = "bold 15px monospace";
-      ctx.fillText("★ INSERT COIN // TAP TO ESCAPE BUNKER ★", LOGICAL_WIDTH / 2, 370);
+      ctx.fillText("★ TAP SCREEN OR D-PAD TO ESCAPE BUNKER ★", LOGICAL_WIDTH / 2, 365);
 
       ctx.fillStyle = "#94a3b8";
-      ctx.font = "11px monospace";
-      ctx.fillText("USE ARROW KEYS, WASD, OR SWIPE TO MOVE", LOGICAL_WIDTH / 2, 410);
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("⚡ SWIPE SCREEN OR USE ARCADE D-PAD TO MOVE ⚡", LOGICAL_WIDTH / 2, 405);
 
       ctx.strokeStyle = "#fbbf24";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(60, 240, LOGICAL_WIDTH - 120, 200);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(40, 230, LOGICAL_WIDTH - 80, 220);
     }
 
     // --- STATE 3: LEVEL CLEAR (Board Flashes Gold, Speed +5%) ---
@@ -3001,6 +3114,7 @@
           score += bonusItem.points;
           popupScores.push({ text: `${bonusItem.points} ${bonusItem.name}`, x: bonusItem.x, y: bonusItem.y - 12, alpha: 1.0 });
           audio.playBonusItemChime();
+          triggerHaptic(40);
           collectedBonusItems.push(bonusItem.id);
           bonusItem.active = false;
           updateHighScore();
@@ -3022,6 +3136,7 @@
           score += ghostStreakScore;
           popupScores.push({ text: ghostStreakScore, x: g.x, y: g.y, alpha: 1.0 });
           audio.playEnemyCrunchChime();
+          triggerHaptic(60);
           ghostStreakScore *= 2;
           updateHighScore();
         } else if (g.state === 'CHASE' || g.ignoresImmunity) {
@@ -3061,7 +3176,38 @@
     gameState = 'PLAYING';
   }
 
-  // --- 11. INPUT CONTROLLER ---
+  // --- 11. INPUT CONTROLLER & TURN INDICATOR ---
+  const turnIndicator = {
+    dirX: 0,
+    dirY: 0,
+    alpha: 0
+  };
+
+  function drawTurnIndicator(ctx) {
+    if (turnIndicator.alpha <= 0.01) return;
+    ctx.save();
+    const cx = player.x;
+    const cy = player.y;
+    const arrowDist = 28;
+    const ax = cx + turnIndicator.dirX * arrowDist;
+    const ay = cy + turnIndicator.dirY * arrowDist;
+    const angle = Math.atan2(turnIndicator.dirY, turnIndicator.dirX);
+
+    ctx.translate(ax, ay);
+    ctx.rotate(angle);
+    ctx.fillStyle = `rgba(251, 191, 36, ${turnIndicator.alpha * 0.75})`;
+    ctx.beginPath();
+    ctx.moveTo(8, 0);
+    ctx.lineTo(-6, -6);
+    ctx.lineTo(-3, 0);
+    ctx.lineTo(-6, 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    turnIndicator.alpha = Math.max(0, turnIndicator.alpha - 0.05);
+  }
+
   function handleDirectionInput(dx, dy) {
     audio.init();
     audio.resume();
@@ -3070,6 +3216,9 @@
       startNewGame();
       player.nextDirX = dx;
       player.nextDirY = dy;
+      turnIndicator.dirX = dx;
+      turnIndicator.dirY = dy;
+      turnIndicator.alpha = 1.0;
       return;
     }
 
@@ -3084,6 +3233,10 @@
 
     player.nextDirX = dx;
     player.nextDirY = dy;
+    turnIndicator.dirX = dx;
+    turnIndicator.dirY = dy;
+    turnIndicator.alpha = 1.0;
+    triggerHaptic(12);
   }
 
   window.addEventListener('keydown', (e) => {
@@ -3129,16 +3282,17 @@
     startNewGame();
   });
 
-  // Touch Swipe on Canvas
+  // Continuous Touch Gesture Steering on Canvas (Zero-lag cornering without lifting thumb)
   let touchStartX = 0;
   let touchStartY = 0;
+  let isTouchingCanvas = false;
 
   canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     audio.init();
     audio.resume();
 
-    if (gameState === 'START') {
+    if (gameState === 'START' || gameState === 'GAMEOVER') {
       startNewGame();
       return;
     }
@@ -3146,31 +3300,91 @@
     const t = e.touches[0];
     touchStartX = t.clientX;
     touchStartY = t.clientY;
+    isTouchingCanvas = true;
   }, { passive: false });
 
   canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
-  }, { passive: false });
-
-  canvas.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    if (!e.changedTouches || e.changedTouches.length === 0) return;
-    const t = e.changedTouches[0];
+    if (!isTouchingCanvas || !e.touches || e.touches.length === 0) return;
+    const t = e.touches[0];
     const dx = t.clientX - touchStartX;
     const dy = t.clientY - touchStartY;
-    const absX = Math.abs(dx);
-    const absY = Math.abs(dy);
+    const dist = Math.hypot(dx, dy);
 
-    if (Math.max(absX, absY) > 18) {
-      if (absX > absY) {
+    // Immediate zero-latency turn threshold (12px)
+    if (dist >= 12) {
+      if (Math.abs(dx) > Math.abs(dy)) {
         handleDirectionInput(dx > 0 ? 1 : -1, 0);
       } else {
         handleDirectionInput(0, dy > 0 ? 1 : -1);
       }
+      // Re-anchor start point so continuous gliding turns around corners effortlessly
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
     }
   }, { passive: false });
 
-  // Virtual Arcade D-Pad Buttons
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    isTouchingCanvas = false;
+  }, { passive: false });
+
+  canvas.addEventListener('touchcancel', () => {
+    isTouchingCanvas = false;
+  });
+
+  // Virtual Arcade D-Pad Buttons & Sliding Pointer Tracking
+  const dpadCluster = document.getElementById('dpad-cluster');
+  let activeDpadBtn = null;
+
+  function processDpadPointer(clientX, clientY) {
+    const elem = document.elementFromPoint(clientX, clientY);
+    const btn = elem ? elem.closest('.dpad-btn') : null;
+    if (btn !== activeDpadBtn) {
+      if (activeDpadBtn) activeDpadBtn.classList.remove('pressed');
+      activeDpadBtn = btn;
+      if (activeDpadBtn) {
+        activeDpadBtn.classList.add('pressed');
+        const dir = activeDpadBtn.getAttribute('data-dir');
+        if (dir) {
+          const [dx, dy] = dir.split(',').map(Number);
+          handleDirectionInput(dx, dy);
+        }
+      }
+    }
+  }
+
+  function clearActiveDpad() {
+    if (activeDpadBtn) {
+      activeDpadBtn.classList.remove('pressed');
+      activeDpadBtn = null;
+    }
+  }
+
+  if (dpadCluster) {
+    dpadCluster.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      try { dpadCluster.setPointerCapture(e.pointerId); } catch (err) {}
+      processDpadPointer(e.clientX, e.clientY);
+    });
+
+    dpadCluster.addEventListener('pointermove', (e) => {
+      if (e.buttons > 0 || e.pointerType === 'touch') {
+        processDpadPointer(e.clientX, e.clientY);
+      }
+    });
+
+    dpadCluster.addEventListener('pointerup', (e) => {
+      e.preventDefault();
+      try { dpadCluster.releasePointerCapture(e.pointerId); } catch (err) {}
+      clearActiveDpad();
+    });
+
+    dpadCluster.addEventListener('pointercancel', (e) => {
+      clearActiveDpad();
+    });
+  }
+
   const dpadConfigs = [
     { id: 't-up', dx: 0, dy: -1 },
     { id: 't-down', dx: 0, dy: 1 },
@@ -3195,10 +3409,6 @@
       btn.classList.remove('pressed');
     };
 
-    btn.addEventListener('pointerdown', onDown);
-    btn.addEventListener('pointerup', onUp);
-    btn.addEventListener('pointercancel', onUp);
-    btn.addEventListener('pointerleave', onUp);
     btn.addEventListener('touchstart', onDown, { passive: false });
     btn.addEventListener('touchend', onUp, { passive: false });
   });
@@ -3256,7 +3466,7 @@
       if (deathAnim.scale > 0.05) {
         ctx.save();
         ctx.translate(deathAnim.x, deathAnim.y);
-        ctx.scale(1.35 * deathAnim.scale, 1.35 * deathAnim.scale);
+        ctx.scale(1.65 * deathAnim.scale, 1.65 * deathAnim.scale);
         ctx.rotate(deathAnim.spinAngle);
 
         const R = 11.5;
@@ -3295,7 +3505,7 @@
 
         ctx.save();
         ctx.translate(deathAnim.x, deathAnim.y + deathAnim.hairOffsetY);
-        ctx.scale(1.35, 1.35);
+        ctx.scale(1.65, 1.65);
         ctx.rotate(deathAnim.spinAngle * 0.5);
         ctx.fillStyle = "#fde047";
         ctx.beginPath();
@@ -3317,6 +3527,7 @@
       }
     } else {
       drawPacDon(ctx, player.x, player.y, player.facing, player.vTilt, player.mouthAngle);
+      drawTurnIndicator(ctx);
     }
 
     drawHUD();
